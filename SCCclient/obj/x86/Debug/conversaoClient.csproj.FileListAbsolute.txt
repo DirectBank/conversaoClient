@@ -1,0 +1,107 @@
+E:\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
+E:\conversaoClient\SCCclient\bin\Debug\Reports.dll
+E:\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
+E:\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
+E:\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
+E:\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
+E:\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
+E:\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
+E:\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
+E:\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
+E:\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csprojAssemblyReference.cache
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.AssemblyReference.cache
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Reports.dll
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
+D:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Reports.dll
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.AssemblyReference.cache
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.SuggestedBindingRedirects.cache
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
+E:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.AssemblyReference.cache
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.SuggestedBindingRedirects.cache
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Reports.dll
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
+C:\Dropbox\Projweb2012\Desktop\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\Reports.dll
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.AssemblyReference.cache
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
+C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
