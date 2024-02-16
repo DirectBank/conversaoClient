@@ -105,3 +105,25 @@ C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conve
 C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
 C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
 C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\Reports.dll
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
+C:\GitHub\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.AssemblyReference.cache
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.SuggestedBindingRedirects.cache
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
+C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb

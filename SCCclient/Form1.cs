@@ -28,7 +28,7 @@ namespace conversaoClient
       private DateTime dDataInclusao, dDataParaEnviar, dDataHoje;
 
       //private string sVersao = "21.07.16.16:30"; //ano.mes.dia.hora
-      private string sVersao = "23.11.08.30:00"; //ano.mes.dia.hora
+      private string sVersao = "24.02.08.16:10"; //ano.mes.dia.hora
 
       private BackgroundWorker bgw;
       private bool bIsCancel = false;
@@ -704,35 +704,54 @@ namespace conversaoClient
                      {
                         listBox1.Items.Add("       - (TACO) - Localizado arquivo.");
 
-                        byte[] arquivoM = new byte[0];
-                        DataRow linhaM = dsArquivosTACO.Tables[0].Rows[0];
-                        arquivoM = (byte[])linhaM["arquivo"];
+                        // Caso tenha urlArquivo já está no Firebase, não é necessário realizar a conversão (Download/Upload).
+                        // Alguns arquivos onvertidos já não estão mais em Bytes na Taco.
+                        string sUrlArquivoTaco = dsArquivosTACO.Tables["arquivos"].Rows[0]["urlArquivo"].ToString();
 
-                        // Enviar o Bytes para o FIREBASE.
-                        // Sobe para o Firebase o documento
-                        if (Convert.ToInt32(sId_arquivo) > 0 && sNomeArquivoEditado != "" && bSegue)
+                        if (sUrlArquivoTaco != "")
                         {
-                           listBox1.Items.Add("       - (Firebase) Enviando arquivo...");
-
-                           // Faz a rolagem da lista
-                           listBox1.SelectedIndex = listBox1.Items.Count - 1;
-
-                           if (!funDrive1.uploadToDrive(this.id_empresa, "GED", "SCC_ARQUIVO", sId_arquivo, arquivoM, sNomeArquivoEditado))
-                           {
-                              listBox1.Items.Add("          - Já realizado envio anteriormente");
-                           }
-                           else
-                           {
-                              listBox1.Items.Add("          - Enviado!");
-                           }
-
-                           registraConversao(sId_arquivo);
+                           registraConversao(sId_arquivo, sUrlArquivoTaco);
 
                            // Faz a rolagem da lista
                            listBox1.SelectedIndex = listBox1.Items.Count - 1;
 
                            // Pausa de 2 segundos, evitar TimeOut.
                            System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2));
+
+                        }
+                        else
+                        {
+
+                           byte[] arquivoM = new byte[0];
+                           DataRow linhaM = dsArquivosTACO.Tables[0].Rows[0];
+                           arquivoM = (byte[])linhaM["arquivo"];
+
+                           // Enviar o Bytes para o FIREBASE.
+                           // Sobe para o Firebase o documento
+                           if (Convert.ToInt32(sId_arquivo) > 0 && sNomeArquivoEditado != "" && bSegue)
+                           {
+                              listBox1.Items.Add("       - (Firebase) Enviando arquivo...");
+
+                              // Faz a rolagem da lista
+                              listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                              if (!funDrive1.uploadToDrive(this.id_empresa, "GED", "SCC_ARQUIVO", sId_arquivo, arquivoM, sNomeArquivoEditado))
+                              {
+                                 listBox1.Items.Add("          - Já realizado envio anteriormente");
+                              }
+                              else
+                              {
+                                 listBox1.Items.Add("          - Enviado!");
+                              }
+
+                              registraConversao(sId_arquivo, "");
+
+                              // Faz a rolagem da lista
+                              listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                              // Pausa de 2 segundos, evitar TimeOut.
+                              System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2));
+                           }
                         }
                      }
                      else
@@ -1233,7 +1252,7 @@ namespace conversaoClient
          return sAviso;
       }
 
-      private void registraConversao(string sId_arquivo)
+      private void registraConversao(string sId_arquivo, string sUrlArquivoTaco="")
       {
          try
          {
@@ -1247,6 +1266,7 @@ namespace conversaoClient
                   string sCmd = "";
                   sCmd = "EXEC SCCSP_arquivo @id_empresa = " + this.id_empresa + ", " +
                          " @id_arquivo=" + sId_arquivo + ", " +
+                         " @urlArquivoTaco='"+ sUrlArquivoTaco + "', " +
                          "@modo=23";
 
                   SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
