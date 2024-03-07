@@ -35,6 +35,9 @@
          this.txtCodigoAdm = new System.Windows.Forms.TextBox();
          this.label1 = new System.Windows.Forms.Label();
          this.gbConversao = new System.Windows.Forms.GroupBox();
+         this.label3 = new System.Windows.Forms.Label();
+         this.txtCodigoCliente = new System.Windows.Forms.TextBox();
+         this.rbOmeupredioLocal = new System.Windows.Forms.RadioButton();
          this.rbWorkOffice = new System.Windows.Forms.RadioButton();
          this.txtPath = new System.Windows.Forms.TextBox();
          this.dtInicio = new System.Windows.Forms.DateTimePicker();
@@ -42,9 +45,6 @@
          this.rbOmeupredioTaco = new System.Windows.Forms.RadioButton();
          this.label2 = new System.Windows.Forms.Label();
          this.listBox1 = new System.Windows.Forms.ListBox();
-         this.rbOmeupredioLocal = new System.Windows.Forms.RadioButton();
-         this.txtCodigoCliente = new System.Windows.Forms.TextBox();
-         this.label3 = new System.Windows.Forms.Label();
          this.gbConversao.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -110,6 +110,35 @@
          this.gbConversao.Text = "Conversão ";
          this.gbConversao.Enter += new System.EventHandler(this.gbConversao_Enter);
          // 
+         // label3
+         // 
+         this.label3.AutoSize = true;
+         this.label3.Location = new System.Drawing.Point(363, 125);
+         this.label3.Name = "label3";
+         this.label3.RightToLeft = System.Windows.Forms.RightToLeft.No;
+         this.label3.Size = new System.Drawing.Size(129, 16);
+         this.label3.TabIndex = 103;
+         this.label3.Text = "Código Condomínio:";
+         this.label3.Click += new System.EventHandler(this.label3_Click);
+         // 
+         // txtCodigoCliente
+         // 
+         this.txtCodigoCliente.Location = new System.Drawing.Point(498, 121);
+         this.txtCodigoCliente.Name = "txtCodigoCliente";
+         this.txtCodigoCliente.Size = new System.Drawing.Size(76, 22);
+         this.txtCodigoCliente.TabIndex = 106;
+         // 
+         // rbOmeupredioLocal
+         // 
+         this.rbOmeupredioLocal.AutoSize = true;
+         this.rbOmeupredioLocal.Location = new System.Drawing.Point(28, 126);
+         this.rbOmeupredioLocal.Name = "rbOmeupredioLocal";
+         this.rbOmeupredioLocal.Size = new System.Drawing.Size(245, 20);
+         this.rbOmeupredioLocal.TabIndex = 105;
+         this.rbOmeupredioLocal.Text = "Arquivos Omeupredio (Taco / Local)";
+         this.rbOmeupredioLocal.UseVisualStyleBackColor = true;
+         this.rbOmeupredioLocal.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged_1);
+         // 
          // rbWorkOffice
          // 
          this.rbWorkOffice.AutoSize = true;
@@ -122,7 +151,7 @@
          // 
          // txtPath
          // 
-         this.txtPath.Location = new System.Drawing.Point(380, 63);
+         this.txtPath.Location = new System.Drawing.Point(380, 60);
          this.txtPath.Name = "txtPath";
          this.txtPath.ReadOnly = true;
          this.txtPath.Size = new System.Drawing.Size(194, 22);
@@ -182,35 +211,6 @@
          this.listBox1.Size = new System.Drawing.Size(593, 308);
          this.listBox1.TabIndex = 102;
          // 
-         // rbOmeupredioLocal
-         // 
-         this.rbOmeupredioLocal.AutoSize = true;
-         this.rbOmeupredioLocal.Location = new System.Drawing.Point(28, 131);
-         this.rbOmeupredioLocal.Name = "rbOmeupredioLocal";
-         this.rbOmeupredioLocal.Size = new System.Drawing.Size(245, 20);
-         this.rbOmeupredioLocal.TabIndex = 105;
-         this.rbOmeupredioLocal.Text = "Arquivos Omeupredio (Taco / Local)";
-         this.rbOmeupredioLocal.UseVisualStyleBackColor = true;
-         this.rbOmeupredioLocal.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged_1);
-         // 
-         // txtCodigoCliente
-         // 
-         this.txtCodigoCliente.Location = new System.Drawing.Point(498, 129);
-         this.txtCodigoCliente.Name = "txtCodigoCliente";
-         this.txtCodigoCliente.Size = new System.Drawing.Size(76, 22);
-         this.txtCodigoCliente.TabIndex = 106;
-         // 
-         // label3
-         // 
-         this.label3.AutoSize = true;
-         this.label3.Location = new System.Drawing.Point(363, 133);
-         this.label3.Name = "label3";
-         this.label3.RightToLeft = System.Windows.Forms.RightToLeft.No;
-         this.label3.Size = new System.Drawing.Size(129, 16);
-         this.label3.TabIndex = 103;
-         this.label3.Text = "Código Condomínio:";
-         this.label3.Click += new System.EventHandler(this.label3_Click);
-         // 
          // frmMain
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -228,7 +228,7 @@
          this.MaximizeBox = false;
          this.MinimizeBox = false;
          this.Name = "frmMain";
-         this.Text = "Push Notification - Versão ";
+         this.Text = "Conversão";
          this.Load += new System.EventHandler(this.frmMain_Load);
          this.gbConversao.ResumeLayout(false);
          this.gbConversao.PerformLayout();

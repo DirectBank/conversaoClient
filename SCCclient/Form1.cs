@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
+using System.Web.UI.WebControls;
 using System.Windows.Forms;
 
 
@@ -22,13 +23,16 @@ namespace conversaoClient
       DataSet dsArquivosAzure = new DataSet();
       DataSet dsArquivosTACO = new DataSet();
 
+      DataSet dsOcorrenciasTACO = new DataSet();
+      DataSet dsOcorrenciasAzure = new DataSet();
+
       // DataSet para conversão de foto dos usuarios Workoffice
       DataSet dsUsuariosWorkoffice = new DataSet();
 
       private DateTime dDataInclusao, dDataParaEnviar, dDataHoje;
 
       //private string sVersao = "21.07.16.16:30"; //ano.mes.dia.hora
-      private string sVersao = "24.02.08.16:10"; //ano.mes.dia.hora
+      private string sVersao = "24.03.07.10:44"; //ano.mes.dia.hora
 
       private BackgroundWorker bgw;
       private bool bIsCancel = false;
@@ -37,6 +41,8 @@ namespace conversaoClient
       private string id_empresa = "", id_cliente = "", id_usuario = "";
       private string sTotal, sTotalArquivos, sEnviados, sTotalDoc, sConvertidos,
                      sLblStatus_0, sLblStatus_1, sLblStatus_2, sLblStatus_3, sErroCatch, sDataInicio;
+      private string sTotalOcorrencias="";
+
       private int _iBgwProgress;
 
       // Contador entre processamentos
@@ -100,7 +106,6 @@ namespace conversaoClient
       {
 
       }
-
 
       private void registraConversaoWO(String sId_empresa, string sId_usuario, String sUrlFotoUsuario)
       {
@@ -302,12 +307,13 @@ namespace conversaoClient
          bIsCancel = false;
          clearFields();
 
-         if (rbWorkOffice.Checked)
+         if (rbWorkOffice.Checked)  // Conversão FOTO DO LOGIN (Bytes/Firebase) 
          {
             converteFotoLoginUsuario();
             MessageBox.Show("Processo concluído!", "Conversão");
          }
-         else if (rbOmeupredioLocal.Checked) {
+         else if (rbOmeupredioLocal.Checked) // Download TACO arquivos, para pasta.
+         {
             this.dtInicio.Text = dtInicio.Value.ToShortDateString();
             this.sCodigoAdm = this.txtCodigoAdm.Text.Trim();
             this.sCliente = this.txtCodigoCliente.Text.Trim();
@@ -322,11 +328,10 @@ namespace conversaoClient
             } else {
                MessageBox.Show("Informe o código da adm e do condomínio.", "Conversão");
             }
-            //MessageBox.Show("Isso é um alerta!", "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Information);
          }
          else
          {
-
+            // Conversão TACO/AZURE
             this.dtInicio.Text = dtInicio.Value.ToShortDateString();
             this.sCodigoAdm = this.txtCodigoAdm.Text.Trim();
 
@@ -345,7 +350,7 @@ namespace conversaoClient
       }
       #endregion
 
-      // LOCALIZA CLIENTES JÁ CADASTRADOS NA PLATAFORMA ONLINE (SCC ONLINE / UNIDADEZ)
+      // Localiza clientes cadastrados no SCC ONLINE
       private void procuraClientesAzure()
       {
          dsClientesAzure.Clear();
@@ -390,21 +395,16 @@ namespace conversaoClient
 
                listBox1.Items.Add("**************** Procedimento realizado! ****************");
                listBox1.SelectedIndex = listBox1.Items.Count - 1;
-
                MessageBox.Show("Procedimento realizado!", "Conversão");
             }
             else
             {
                //// Conversão de arquivos locais \PRG\SCC\ANEXOS\ para AZURE
-               //MessageBox.Show("Em desenvolvimento, envio de anexos \\PRG\\SCC\\ANEXOS\\", "Conversão");
-
                procuraArquivosLOCAL(dsClientesAzure);
 
                listBox1.Items.Add("**************** Procedimento realizado! ****************");
                listBox1.SelectedIndex = listBox1.Items.Count - 1;
-
                MessageBox.Show("Procedimento realizado!", "Conversão");
-
             }
          }
          else
@@ -413,19 +413,19 @@ namespace conversaoClient
          }
       }
 
-      #region CONVERSÃO ARQUIVOS TACO/AZURE
+      //------------------------------------------------------------------------------------------------------------------//
+      #region CONVERSÃO ARQUIVOS  BD TACO/BD AZURE
 
       private void procuraArquivosTACO(DataSet dsCliente)
       {
          int iClientes = dsCliente.Tables["clientes"].Rows.Count;
          sTotal = iClientes.ToString();
 
-         listBox1.Items.Add("(TACO) - Consultando arquivos...");
+         listBox1.Items.Add("(TACO) - Consultando registros...");
 
-         // Procura arquivos por Cliente
+         // Procura registros por Cliente
          for (int i = 0; i < iClientes; i++)
          {
-
             if (bIsCancel) { return; }
 
             // ID_empresa e ID_cliente (Azure)
@@ -435,7 +435,7 @@ namespace conversaoClient
 
             String sCliente = "Cliente: " + dsCliente.Tables["clientes"].Rows[i]["codigo"].ToString() + "-" + dsCliente.Tables["clientes"].Rows[i]["nome"].ToString();
 
-            // Pesquisar ID_arquivo na TACO.
+            #region CONVERSÃO DOCUMENTOS  (TACO/AZURE)
             try
             {
                listBox1.Items.Add("" + sCliente);
@@ -446,11 +446,6 @@ namespace conversaoClient
                   try
                   {
                      string sCmd = "";
-                     //sCmd = "EXEC OMPSP_documento @codigoAdm='" + this.sCodigoAdm + "', " +
-                     //       "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
-                     //       "@data1='" + this.dtInicio.Text + "', " +
-                     //       "@modo=50";
-
                      sCmd = "EXEC OMPSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
                             "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
                             "@data1='" + this.dtInicio.Text + "', " +
@@ -500,8 +495,386 @@ namespace conversaoClient
             {
                listBox1.Items.Add("    - Não existem registros para esse cliente.");
             }
+            #endregion
+
+            #region CONVERSÃO OCORRÊNCIAS  (TACO/AZURE)
+            try
+            {
+               listBox1.Items.Add("" + sCliente);
+
+               dsOcorrenciasTACO.Clear();
+               if (funDB1.conectarTaco() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     sCmd = "EXEC OMPSP_ocorrencia @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                            "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
+                            "@data1='" + this.dtInicio.Text + "', " +
+                            "@isRel=1, "+
+                            "@modo=12";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsOcorrenciasTACO, "ocorrencias");
+                     funDB1.fecharTaco();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro no procuraOcorrenciasTACO()");
+                  }
+                  finally
+                  {
+                     funDB1.fecharTaco();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro no procuraOcorrenciasTACO()");
+            }
+            finally
+            {
+               funDB1.fecharTaco();
+            }
+
+            if (dsOcorrenciasTACO.Tables.Count > 0)
+            {
+               if (dsOcorrenciasTACO.Tables["ocorrencias"].Rows.Count > 0)
+               {
+                  // Insere lista ocorrencias TACO em AZURE
+                  // Retorna lista do OM_ocorrenciaArquivo inseridas (id_ocorrenciasArquivo e id_ocorrenciaArquivoTaco).
+                  DataSet dsRetornoAzure = insereOcorrenciasAZURE(dsOcorrenciasTACO);
+                  if (dsRetornoAzure.Tables["ocorrencias"].Rows.Count > 0)
+                  {
+                     // Percorre lista de ocorrencias AZURE e localiza ocorrencia arquivo bytes TACO
+                     // Envia para o Firebase
+                     procuraOcorrenciasBinarioTaco(dsRetornoAzure);
+                  }
+                  else
+                  {
+                     listBox1.Items.Add("    - Não existem registros de ocorrências a serem enviados.");
+                  }
+               }
+               else
+               {
+                  listBox1.Items.Add("    - Não existem registros de ocorrências para esse cliente.");
+               }
+            }
+            #endregion
 
             listBox1.Items.Add("");
+
+            // Faz a lista correr.
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+         }
+      }
+
+      private DataSet insereOcorrenciasAZURE(DataSet dsOcorrenciasTACO)
+      {
+         dsOcorrenciasAzure.Clear();
+
+         listBox1.Items.Add("    - Foram encontrado(s) " + dsOcorrenciasTACO.Tables["ocorrencias"].Rows.Count + " ocorrências.");
+         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+         int iOcorrencias = dsOcorrenciasTACO.Tables["ocorrencias"].Rows.Count;
+         sTotalOcorrencias = iOcorrencias.ToString();
+         string sXml = "";
+
+         if (iOcorrencias > 0)
+         {
+            // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
+            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+            sXml = montaXMLOcorrenciasTACO(dsOcorrenciasTACO);
+
+            // Envia ID_ocorrenciaTACO (TACO) para OM_ocorrenciaArquivo (AZURE) .
+            // Retorna ID_ocorrenciaArquivo oficial (AZURE)
+            try
+            {
+               listBox1.Items.Add("    - Enviando lista de ocorrências TACO/AZURE (insereOcorrenciasAZURE)");
+
+               if (funDB1.conectarAzure() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     // Voltar Aqui....
+                     sCmd = "EXEC OMPSP_ocorrencia @id_empresa=" + this.id_empresa + ", " +
+                            "@id_cliente=" + this.id_cliente + ", " +
+                            "@strXml='" + sXml + "', " +
+                            "@modo=30";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsOcorrenciasAzure, "ocorrencias");
+                     funDB1.fecharAzure();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro 1 enviando lista de ocorrências TACO/AZURE (insereOcorrenciasAZURE)");
+                  }
+                  finally
+                  {
+                     funDB1.fecharAzure();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro 2 enviando lista de ocorrências TACO/AZURE (insereOcorrenciasAZURE)");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+         }
+
+         return dsOcorrenciasAzure;
+      }
+      private string montaXMLOcorrenciasTACO(DataSet ds)
+      {
+         int iOcorrencias = ds.Tables["ocorrencias"].Rows.Count;
+
+         string sXml = "";
+
+         sXml = "<arquivo>";
+         sXml += "<cliente>";
+         sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
+         sXml += "<id_cliente>" + this.id_cliente + "</id_cliente>";
+
+         for (int i = 0; i < iOcorrencias; i++)
+         {
+            string sId_ocorrenciaTaco = "", sId_usuario = "", sBloco = "", sApto = "", sTipo = "", sDescricaoTipo = "", sData = "", sHora = "",
+                   sOcorrencia = "", sNome = "", sExtensao = "", sTamanho = "",
+                   sId_usuarioCitado = "", sDataResposta="", sHoraResposta="", sRespondido = "", sResposta="", sId_usuarioResposta="",
+                   sBlocoCitada ="", sAptoCitada="", sTipoCitada="", sBaixarImagem="", sDataCadastro="", sHoraCadastro="",
+                   sId_ocorrenciaArquivoTaco ="", sImagemTipo="", sImagemSize="", sId_conversao="",
+                   sBlocoResposta="", sAptoResposta="";
+
+            sId_ocorrenciaTaco = ds.Tables["ocorrencias"].Rows[i]["id_ocorrencia"].ToString();
+            sId_usuario = ds.Tables["ocorrencias"].Rows[i]["id_usuario"].ToString();
+            sBloco = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["bloco"].ToString());
+            sApto = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["apto"].ToString());
+            sTipo = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["tipo"].ToString());
+            sData = ds.Tables["ocorrencias"].Rows[i]["data"].ToString();
+            sHora = ds.Tables["ocorrencias"].Rows[i]["hora"].ToString();
+            sId_usuarioCitado = ds.Tables["ocorrencias"].Rows[i]["id_usuarioCitado"].ToString();
+            sOcorrencia = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["ocorrencia"].ToString());
+            sDataResposta = ds.Tables["ocorrencias"].Rows[i]["dataResposta"].ToString();
+            sHoraResposta = ds.Tables["ocorrencias"].Rows[i]["horaResposta"].ToString();
+            sRespondido = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["respondido"].ToString());
+            sResposta = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["resposta"].ToString());
+            sId_usuarioResposta = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["id_usuarioResposta"].ToString());
+
+            sBlocoCitada = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["blocoCitada"].ToString());
+            sAptoCitada = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["aptoCitada"].ToString());
+            sTipoCitada = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["tipoCitada"].ToString());
+            sBlocoResposta = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["blocoResposta"].ToString());
+            sAptoResposta = funcoes1.LimpaLinha(ds.Tables["ocorrencias"].Rows[i]["aptoResposta"].ToString());
+            sBaixarImagem = ds.Tables["ocorrencias"].Rows[i]["baixarImagem"].ToString();
+            sDataCadastro = ds.Tables["ocorrencias"].Rows[i]["dataCadastro"].ToString();
+            sHoraCadastro = ds.Tables["ocorrencias"].Rows[i]["horaCadastro"].ToString();
+            sId_ocorrenciaArquivoTaco = ds.Tables["ocorrencias"].Rows[i]["id_ocorrenciaArquivo"].ToString();
+            sImagemTipo = ds.Tables["ocorrencias"].Rows[i]["imagemTipo"].ToString();
+            sImagemSize = ds.Tables["ocorrencias"].Rows[i]["imagemSize"].ToString();
+            sId_conversao = ds.Tables["ocorrencias"].Rows[i]["id_conversao"].ToString();
+
+            sXml += "<registro>";
+            sXml += "<id_ocorrenciaTaco>" + sId_ocorrenciaTaco + "</id_ocorrenciaTaco>";
+            sXml += "<id_usuario>" + sId_usuario + "</id_usuario>";
+            sXml += "<bloco>" + sBloco + "</bloco>";
+            sXml += "<apto>" + sApto + "</apto>";
+            sXml += "<tipo>" + sTipo + "</tipo>";
+            sXml += "<data>" + sData + "</data>";
+            sXml += "<hora>" + sHora + "</hora>";
+            sXml += "<id_usuarioCitado>" + sId_usuarioCitado + "</id_usuarioCitado>";
+            sXml += "<ocorrencia>" + sOcorrencia + "</ocorrencia>";
+            sXml += "<dataResposta>" + sDataResposta + "</dataResposta>";
+            sXml += "<respondido>" + sRespondido + "</respondido>";
+            sXml += "<resposta>" + sResposta + "</resposta>";
+            sXml += "<id_usuarioResposta>" + sId_usuarioResposta + "</id_usuarioResposta>";
+            sXml += "<blocoCitada>" + sBlocoCitada + "</blocoCitada>";
+            sXml += "<aptoCitada>" + sAptoCitada + "</aptoCitada>";
+            sXml += "<tipoCitada>" + sTipoCitada + "</tipoCitada>";
+
+            sXml += "<blocoResposta>" + sBlocoResposta + "</blocoResposta>";
+            sXml += "<aptoResposta>" + sAptoResposta + "</aptoResposta>";
+
+            sXml += "<baixarImagem>" + sBaixarImagem + "</baixarImagem>";
+            sXml += "<dataCadastro>" + sDataCadastro + "</dataCadastro>";
+            sXml += "<horaCadastro>" + sHoraCadastro + "</horaCadastro>";
+            sXml += "<id_ocorrenciaArquivoTaco>" + sId_ocorrenciaArquivoTaco + "</id_ocorrenciaArquivoTaco>";
+            sXml += "<imagemTipo>" + sImagemTipo + "</imagemTipo>";
+            sXml += "<imagemSize>" + sImagemSize + "</imagemSize>";
+            sXml += "<id_conversao>" + sId_conversao + "</id_conversao>";
+            sXml += "</registro>";
+
+         }
+         sXml += "</cliente>";
+         sXml += "</arquivo>";
+
+         return sXml;
+      }
+
+      private void procuraOcorrenciasBinarioTaco(DataSet dsRetornoOcorrenciasAzure)
+      {
+         listBox1.Items.Add("    - Procura arquivo binário (TACO).");
+
+         string sNomeArquivoEditado = "";
+         int iOcorrencias = dsRetornoOcorrenciasAzure.Tables["ocorrencias"].Rows.Count;
+
+         // Procura arquivos por Cliente
+         for (int a = 0; a < iOcorrencias; a++)
+         {
+            if (bIsCancel) { return; }
+
+            //dsOcorrenciasTACO.Clear();
+            dsArquivosTACO.Clear();
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+            try
+            {
+               if (funDB1.conectarTaco() == "OK")
+               {
+                  try
+                  {                    
+                     string sId_ocorrenciaTaco = dsRetornoOcorrenciasAzure.Tables["ocorrencias"].Rows[a]["id_ocorrenciaTaco"].ToString();
+                     string sId_ocorrenciaAzure = dsRetornoOcorrenciasAzure.Tables["ocorrencias"].Rows[a]["id_ocorrencia"].ToString();
+                     sNomeArquivoEditado = sId_ocorrenciaAzure.ToString(); // Não tem nome de arquivo, aderiri o ID
+                     string sUrlArquivo = dsRetornoOcorrenciasAzure.Tables["ocorrencias"].Rows[a]["urlArquivo"].ToString(); ; // Se tivesse no Firebase (Taco), viria a informação...não é o caso.
+
+                     listBox1.Items.Add("");
+
+                     listBox1.Items.Add("       " + DateTime.Now.ToString("dd/mm/yyyy H:mm:ss"));
+                     listBox1.Items.Add("       ******* (TACO) id_ocorrencia: " + sId_ocorrenciaTaco + " - (AZURE) id_ocorrencia : " + sId_ocorrenciaAzure + " *******");
+                     listBox1.Items.Add("       Url: " + sUrlArquivo);
+
+                     if (sUrlArquivo.Equals("") || sUrlArquivo.Equals("0"))
+                     {
+                        listBox1.Items.Add("       - (TACO) Arquivo Não possui anexo.");
+
+                     }
+                     else
+                     {
+
+
+                        listBox1.Items.Add("       - (TACO) Buscando arquivo byte.");
+
+                        string sCmd = "";
+                        // VOLTAR AQUI
+                        sCmd = "EXEC OMPSP_ocorrencia @id_ocorrencia=" + sId_ocorrenciaTaco + ", " +
+                               "@modo=20";
+                        Boolean bSegue = false;
+                        try
+                        {
+                           SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
+                           da.SelectCommand.CommandTimeout = 0;
+                           da.Fill(dsArquivosTACO, "arquivos");
+                           bSegue = true;
+                        }
+                        catch (Exception ex)
+                        {
+                           bSegue = false;
+                        }
+                        finally
+                        {
+                           funDB1.fecharTaco();
+                        }
+
+
+                        if (dsArquivosTACO.Tables["arquivos"].Rows.Count > 0)
+                        {
+                           listBox1.Items.Add("       - (TACO) - Localizado arquivo ocorrência.");
+
+                           // Caso tenha urlArquivo já está no Firebase, não é necessário realizar a conversão (Download/Upload).
+                           // Alguns arquivos onvertidos já não estão mais em Bytes na Taco.
+                           //string sUrlArquivoTaco = dsArquivosTACO.Tables["ocorrencias"].Rows[0]["urlArquivo"].ToString();
+
+                           //if (sUrlArquivoTaco != "")
+                           //{
+                           //   registraConversao(sId_arquivo, sUrlArquivoTaco);
+
+                           //   // Faz a rolagem da lista
+                           //   listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                           //   // Pausa de 2 segundos, evitar TimeOut.
+                           //   System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2));
+
+                           //}
+                           //else
+                           //{
+
+                           byte[] arquivoM = new byte[0];
+                           DataRow linhaM = dsArquivosTACO.Tables[0].Rows[0];
+                           arquivoM = (byte[])linhaM["imagem"];
+
+                           // Enviar o Bytes para o FIREBASE.
+                           // Sobe para o Firebase o documento
+                           if (Convert.ToInt32(sId_ocorrenciaTaco) > 0 && bSegue)
+                           {
+                              listBox1.Items.Add("       - (Firebase) Enviando arquivo...");
+
+                              // Faz a rolagem da lista
+                              listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                              //if (!funDrive1.uploadToDrive(this.id_empresa, "GED", "OM_ocorrenciaArquivo", sId_ocorrenciaAzure, arquivoM, sNomeArquivoEditado))
+                              //{
+                              //   listBox1.Items.Add("          - Já realizado envio anteriormente");
+                              //}
+                              //else
+                              //{
+                              //   listBox1.Items.Add("          - Enviado!");
+                              //}
+
+                              string sArquivoCompleto = sUrlArquivo;
+                              //string sMimeType = funDrive1.retornaMimeType(sExtensao);
+                              string sMimeType = "image/jpeg";
+
+                              if (!funDrive1.uploadSCCToDrive(sArquivoCompleto, sMimeType, arquivoM))
+                              {
+                                 listBox1.Items.Add("          - Já realizado envio anteriormente");
+                              }
+                              else
+                              {
+                                 listBox1.Items.Add("          - Enviado!");
+                              }
+
+                              //registraConversaoOcorrencia(sId_ocorrenciaAzure);
+
+                              // Faz a rolagem da lista
+                              listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                              // Pausa de 2 segundos, evitar TimeOut.
+                              System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2));
+                           }
+                           //}
+                        }
+                        else
+                        {
+                           listBox1.Items.Add("       - (TACO) - Não localizado arquivo byte");
+                        }
+                     }
+
+                     registraConversaoOcorrencia(sId_ocorrenciaAzure);
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 2");
+                  }
+                  finally
+                  {
+                     funDB1.fecharTaco();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 3");
+            }
+            finally
+            {
+               funDB1.fecharTaco();
+            }
 
             // Faz a lista correr.
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
@@ -850,11 +1223,8 @@ namespace conversaoClient
          return sXml;
       }
       #endregion
-
       //------------------------------------------------------------------------------------------------------------------//
-
       #region CONVERSÃO ARQUIVOS LOCAL/AZURE
-
       public Collection<string[]> arrayListaArquivos = new Collection<string[]>();
 
       //public string sPath = "C:\\PRG\\SCC\\ANEXOS\\";
@@ -1240,8 +1610,8 @@ namespace conversaoClient
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
          }
       }
-
       #endregion
+      //------------------------------------------------------------------------------------------------------------------//
 
       private string Aviso(string descricao, int espaco)
       {
@@ -1291,6 +1661,45 @@ namespace conversaoClient
          }
 
       }
+      private void registraConversaoOcorrencia(string sId_ocorrencia)
+      {
+         try
+         {
+            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
+
+            if (funDB1.conectarAzure() == "OK")
+            {
+               try
+               {
+
+                  string sCmd = "";
+                  sCmd = "EXEC OMPSP_ocorrencia @id_empresa = " + this.id_empresa + ", " +
+                         " @id_ocorrencia=" + sId_ocorrencia + ", " +
+                         "@modo=31";
+
+                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                  da.SelectCommand.CommandTimeout = 0;
+                  da.Fill(dsArquivosAzure, "ocorrenciaOK");
+                  funDB1.fecharAzure();
+
+               }
+               catch (SqlException ex)
+               {
+                  listBox1.Items.Add("    - Erro enviando lista de ocorrencias TACO/AZURE (insereOcorrenciasAZURE)");
+               }
+               finally
+               {
+                  funDB1.fecharAzure();
+               }
+            }
+         }
+         catch (SqlException ex)
+         {
+            listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_ocorrencia: " + sId_ocorrencia);
+         }
+
+      }
 
    }
+
 }
