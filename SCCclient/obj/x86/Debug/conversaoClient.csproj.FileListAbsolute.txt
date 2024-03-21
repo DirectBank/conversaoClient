@@ -105,28 +105,11 @@ C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conve
 C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
 C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
 C:\Users\WO-055\Desktop\PRG DEV C#\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\Reports.dll
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
-C:\GitHub\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.AssemblyReference.cache
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.SuggestedBindingRedirects.cache
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
-C:\GitHub\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb
+C:\Github\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.config
+C:\Github\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe.manifest
+C:\Github\conversaoClient\SCCclient\bin\Debug\conversaoClient.application
+C:\Github\conversaoClient\SCCclient\bin\Debug\conversaoClient.exe
+C:\Github\conversaoClient\SCCclient\bin\Debug\conversaoClient.pdb
 C:\Github\conversaoClient\SCCclient\bin\Debug\Google.Api.Gax.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\Google.Api.Gax.Rest.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\Google.Apis.Auth.dll
@@ -136,6 +119,9 @@ C:\Github\conversaoClient\SCCclient\bin\Debug\Google.Apis.Storage.v1.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\Google.Cloud.Storage.V1.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Github\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.dll
+C:\Github\conversaoClient\SCCclient\bin\Debug\Reports.dll
+C:\Github\conversaoClient\SCCclient\bin\Debug\RestSharp.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\System.CodeDom.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
 C:\Github\conversaoClient\SCCclient\bin\Debug\System.Threading.Tasks.Extensions.dll
@@ -156,7 +142,21 @@ C:\Github\conversaoClient\SCCclient\bin\Debug\Google.Cloud.Storage.V1.pdb
 C:\Github\conversaoClient\SCCclient\bin\Debug\Google.Cloud.Storage.V1.xml
 C:\Github\conversaoClient\SCCclient\bin\Debug\Microsoft.Bcl.AsyncInterfaces.xml
 C:\Github\conversaoClient\SCCclient\bin\Debug\Microsoft.Extensions.DependencyInjection.Abstractions.xml
+C:\Github\conversaoClient\SCCclient\bin\Debug\Newtonsoft.Json.xml
+C:\Github\conversaoClient\SCCclient\bin\Debug\RestSharp.xml
 C:\Github\conversaoClient\SCCclient\bin\Debug\System.CodeDom.xml
 C:\Github\conversaoClient\SCCclient\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
 C:\Github\conversaoClient\SCCclient\bin\Debug\System.Threading.Tasks.Extensions.xml
 C:\Github\conversaoClient\SCCclient\bin\Debug\System.ValueTuple.xml
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.AssemblyReference.cache
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.SuggestedBindingRedirects.cache
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.frmMain.resources
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.Properties.Resources.resources
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.GenerateResource.cache
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CoreCompileInputs.cache
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.TrustInfo.xml
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe.manifest
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.application
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.csproj.CopyComplete
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.exe
+C:\Github\conversaoClient\SCCclient\obj\x86\Debug\conversaoClient.pdb

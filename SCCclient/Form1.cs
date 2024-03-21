@@ -32,7 +32,7 @@ namespace conversaoClient
       private DateTime dDataInclusao, dDataParaEnviar, dDataHoje;
 
       //private string sVersao = "21.07.16.16:30"; //ano.mes.dia.hora
-      private string sVersao = "24.03.07.10:44"; //ano.mes.dia.hora
+      private string sVersao = "24.03.21.16:00"; //ano.mes.dia.hora
 
       private BackgroundWorker bgw;
       private bool bIsCancel = false;
@@ -41,7 +41,7 @@ namespace conversaoClient
       private string id_empresa = "", id_cliente = "", id_usuario = "";
       private string sTotal, sTotalArquivos, sEnviados, sTotalDoc, sConvertidos,
                      sLblStatus_0, sLblStatus_1, sLblStatus_2, sLblStatus_3, sErroCatch, sDataInicio;
-      private string sTotalOcorrencias="";
+      private string sTotalOcorrencias = "";
 
       private int _iBgwProgress;
 
@@ -145,7 +145,8 @@ namespace conversaoClient
 
       }
 
-      private void radioButton1_CheckedChanged_1(object sender, EventArgs e) {
+      private void radioButton1_CheckedChanged_1(object sender, EventArgs e)
+      {
 
       }
 
@@ -244,7 +245,7 @@ namespace conversaoClient
                }
 
                // ENVIA IMAGEMS
-               if (dsArquivosTACO != null && dsArquivosTACO.Tables.Count>0)
+               if (dsArquivosTACO != null && dsArquivosTACO.Tables.Count > 0)
                {
                   if (dsArquivosTACO.Tables["imagem"].Rows.Count > 0)
                   {
@@ -298,7 +299,8 @@ namespace conversaoClient
          }
       }
 
-      private void label3_Click(object sender, EventArgs e) {
+      private void label3_Click(object sender, EventArgs e)
+      {
 
       }
 
@@ -320,12 +322,15 @@ namespace conversaoClient
 
             DateTime localDate = DateTime.Now;
 
-            if (!this.sCodigoAdm.Trim().Equals("") && !this.sCliente.Trim().Equals("")) {
+            if (!this.sCodigoAdm.Trim().Equals("") && !this.sCliente.Trim().Equals(""))
+            {
                this.sCodigoAdm = this.sCodigoAdm.PadLeft(8, Convert.ToChar("0"));
                //procuraClientesAzure();
                buscaIdsArquivosTaco();
                MessageBox.Show("Download finalizado", "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } else {
+            }
+            else
+            {
                MessageBox.Show("Informe o código da adm e do condomínio.", "Conversão");
             }
          }
@@ -511,7 +516,7 @@ namespace conversaoClient
                      sCmd = "EXEC OMPSP_ocorrencia @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
                             "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
                             "@data1='" + this.dtInicio.Text + "', " +
-                            "@isRel=1, "+
+                            "@isRel=1, " +
                             "@modo=12";
 
                      SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
@@ -545,15 +550,18 @@ namespace conversaoClient
                   // Insere lista ocorrencias TACO em AZURE
                   // Retorna lista do OM_ocorrenciaArquivo inseridas (id_ocorrenciasArquivo e id_ocorrenciaArquivoTaco).
                   DataSet dsRetornoAzure = insereOcorrenciasAZURE(dsOcorrenciasTACO);
-                  if (dsRetornoAzure.Tables["ocorrencias"].Rows.Count > 0)
+                  if (dsRetornoAzure.Tables.Count > 0)
                   {
-                     // Percorre lista de ocorrencias AZURE e localiza ocorrencia arquivo bytes TACO
-                     // Envia para o Firebase
-                     procuraOcorrenciasBinarioTaco(dsRetornoAzure);
-                  }
-                  else
-                  {
-                     listBox1.Items.Add("    - Não existem registros de ocorrências a serem enviados.");
+                     if (dsRetornoAzure.Tables["ocorrencias"].Rows.Count > 0)
+                     {
+                        // Percorre lista de ocorrencias AZURE e localiza ocorrencia arquivo bytes TACO
+                        // Envia para o Firebase
+                        procuraOcorrenciasBinarioTaco(dsRetornoAzure);
+                     }
+                     else
+                     {
+                        listBox1.Items.Add("    - Não existem registros de ocorrências a serem enviados.");
+                     }
                   }
                }
                else
@@ -646,10 +654,10 @@ namespace conversaoClient
          {
             string sId_ocorrenciaTaco = "", sId_usuario = "", sBloco = "", sApto = "", sTipo = "", sDescricaoTipo = "", sData = "", sHora = "",
                    sOcorrencia = "", sNome = "", sExtensao = "", sTamanho = "",
-                   sId_usuarioCitado = "", sDataResposta="", sHoraResposta="", sRespondido = "", sResposta="", sId_usuarioResposta="",
-                   sBlocoCitada ="", sAptoCitada="", sTipoCitada="", sBaixarImagem="", sDataCadastro="", sHoraCadastro="",
-                   sId_ocorrenciaArquivoTaco ="", sImagemTipo="", sImagemSize="", sId_conversao="",
-                   sBlocoResposta="", sAptoResposta="";
+                   sId_usuarioCitado = "", sDataResposta = "", sHoraResposta = "", sRespondido = "", sResposta = "", sId_usuarioResposta = "",
+                   sBlocoCitada = "", sAptoCitada = "", sTipoCitada = "", sBaixarImagem = "", sDataCadastro = "", sHoraCadastro = "",
+                   sId_ocorrenciaArquivoTaco = "", sImagemTipo = "", sImagemSize = "", sId_conversao = "",
+                   sBlocoResposta = "", sAptoResposta = "";
 
             sId_ocorrenciaTaco = ds.Tables["ocorrencias"].Rows[i]["id_ocorrencia"].ToString();
             sId_usuario = ds.Tables["ocorrencias"].Rows[i]["id_usuario"].ToString();
@@ -737,7 +745,7 @@ namespace conversaoClient
                if (funDB1.conectarTaco() == "OK")
                {
                   try
-                  {                    
+                  {
                      string sId_ocorrenciaTaco = dsRetornoOcorrenciasAzure.Tables["ocorrencias"].Rows[a]["id_ocorrenciaTaco"].ToString();
                      string sId_ocorrenciaAzure = dsRetornoOcorrenciasAzure.Tables["ocorrencias"].Rows[a]["id_ocorrencia"].ToString();
                      sNomeArquivoEditado = sId_ocorrenciaAzure.ToString(); // Não tem nome de arquivo, aderiri o ID
@@ -943,13 +951,17 @@ namespace conversaoClient
          return dsArquivosAzure;
       }
 
-      private void buscaIdsArquivosTaco() {
+      private void buscaIdsArquivosTaco()
+      {
          string erro = "0", msg = "", url = "";
          string pastaDestino = "C:\\PRG\\SCC\\ARQUIVOS_OMP\\" + this.sCliente;
          DataTable dataTable = new DataTable();
-         if (funDB1.conectarTaco() == "OK") {
-            try {
-               if (!Directory.Exists(pastaDestino)) {
+         if (funDB1.conectarTaco() == "OK")
+         {
+            try
+            {
+               if (!Directory.Exists(pastaDestino))
+               {
                   Directory.CreateDirectory(pastaDestino);
                }
                string query = "select a.id_arquivo, a.nome, a.extensao from OM_arquivo a \r\n\tleft outer join OM_empresa emp on emp.codigo=@codigo\r\n\tleft outer join OM_cliente cli on cli.id_empresa=emp.id_empresa and cli.codigo=@codigoCliente\r\n\twhere a.id_empresa=emp.id_empresa and a.id_cliente=cli.id_cliente and isnull(extensao,'')!='' and extensao like '.%'";
@@ -961,28 +973,35 @@ namespace conversaoClient
                dataTable.Load(dr);
                dr.Close();
                int quantidadeDeLinhas = dataTable.Rows.Count;
-               if (quantidadeDeLinhas > 0) {
+               if (quantidadeDeLinhas > 0)
+               {
                   funDB1.fecharTaco();
                   //while (dr.Read()) {
                   listBox1.Items.Add("**************** Iniciando processo ****************");
-                  foreach (DataRow row in dataTable.Rows) {
+                  foreach (DataRow row in dataTable.Rows)
+                  {
                      string arqNome = row["nome"].ToString() != null && row["nome"].ToString() != "" ? (row["id_arquivo"].ToString() + " - " + row["nome"].ToString()) : (row["id_arquivo"].ToString() + row["extensao"].ToString());
                      string caminhoCompletoDestino = Path.Combine(pastaDestino, arqNome);
-                     if (funDB1.conectarTaco() == "OK") {
+                     if (funDB1.conectarTaco() == "OK")
+                     {
                         string queryArquivo = "select arquivo from OM_arquivo where id_arquivo=@id_arquivo and arquivo is not null";
                         SqlCommand cmdArqSql = new SqlCommand(queryArquivo, funDB1.conTaco);
                         cmdArqSql.Parameters.AddWithValue("@id_arquivo", row["id_arquivo"].ToString());
                         SqlDataReader arquivo;
                         arquivo = cmdArqSql.ExecuteReader();
                         //arquivo = cmdArqSql.ExecuteScalar();
-                        if (arquivo.Read()) {
-                           try {
+                        if (arquivo.Read())
+                        {
+                           try
+                           {
                               byte[] arquivoM = new byte[0];
                               arquivoM = (byte[])arquivo["arquivo"];
                               File.WriteAllBytes(caminhoCompletoDestino, arquivoM);
                               listBox1.Items.Add("");
                               listBox1.Items.Add("Adicionado: " + caminhoCompletoDestino);
-                           } catch (Exception err) {
+                           }
+                           catch (Exception err)
+                           {
                               listBox1.Items.Add("");
                               listBox1.Items.Add("ERRO: " + caminhoCompletoDestino);
                               //MessageBox.Show("Erro" + err.Message, "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -990,7 +1009,9 @@ namespace conversaoClient
                            }
                         }
                         //arquivo.Close();
-                     }else {
+                     }
+                     else
+                     {
                         listBox1.Items.Add("");
                         listBox1.Items.Add("ERRO: " + caminhoCompletoDestino);
                      }
@@ -999,10 +1020,14 @@ namespace conversaoClient
                }
                listBox1.Items.Add("");
                listBox1.Items.Add("**************** Processo finalizado ***************");
-            } catch (SqlException err) {
+            }
+            catch (SqlException err)
+            {
                erro = "1";
                msg = err.Message;
-            } finally {
+            }
+            finally
+            {
                funDB1.fecharTaco();
             }
          }
@@ -1068,7 +1093,8 @@ namespace conversaoClient
                      {
                         bSegue = false;
                      }
-                     finally {
+                     finally
+                     {
                         funDB1.fecharTaco();
                      }
 
@@ -1622,7 +1648,7 @@ namespace conversaoClient
          return sAviso;
       }
 
-      private void registraConversao(string sId_arquivo, string sUrlArquivoTaco="")
+      private void registraConversao(string sId_arquivo, string sUrlArquivoTaco = "")
       {
          try
          {
@@ -1636,7 +1662,7 @@ namespace conversaoClient
                   string sCmd = "";
                   sCmd = "EXEC SCCSP_arquivo @id_empresa = " + this.id_empresa + ", " +
                          " @id_arquivo=" + sId_arquivo + ", " +
-                         " @urlArquivoTaco='"+ sUrlArquivoTaco + "', " +
+                         " @urlArquivoTaco='" + sUrlArquivoTaco + "', " +
                          "@modo=23";
 
                   SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
