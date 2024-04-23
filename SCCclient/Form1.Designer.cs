@@ -45,12 +45,13 @@
          this.rbOmeupredioTaco = new System.Windows.Forms.RadioButton();
          this.label2 = new System.Windows.Forms.Label();
          this.listBox1 = new System.Windows.Forms.ListBox();
+         this.rbLocacaoTaco = new System.Windows.Forms.RadioButton();
          this.gbConversao.SuspendLayout();
          this.SuspendLayout();
          // 
          // cmdStop
          // 
-         this.cmdStop.Location = new System.Drawing.Point(40, 512);
+         this.cmdStop.Location = new System.Drawing.Point(40, 538);
          this.cmdStop.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
          this.cmdStop.Name = "cmdStop";
          this.cmdStop.Size = new System.Drawing.Size(84, 31);
@@ -62,7 +63,7 @@
          // 
          // cmdManual
          // 
-         this.cmdManual.Location = new System.Drawing.Point(526, 512);
+         this.cmdManual.Location = new System.Drawing.Point(526, 538);
          this.cmdManual.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
          this.cmdManual.Name = "cmdManual";
          this.cmdManual.Size = new System.Drawing.Size(84, 31);
@@ -94,6 +95,7 @@
          // 
          // gbConversao
          // 
+         this.gbConversao.Controls.Add(this.rbLocacaoTaco);
          this.gbConversao.Controls.Add(this.label3);
          this.gbConversao.Controls.Add(this.txtCodigoCliente);
          this.gbConversao.Controls.Add(this.rbOmeupredioLocal);
@@ -104,7 +106,7 @@
          this.gbConversao.Controls.Add(this.rbOmeupredioTaco);
          this.gbConversao.Location = new System.Drawing.Point(35, 36);
          this.gbConversao.Name = "gbConversao";
-         this.gbConversao.Size = new System.Drawing.Size(593, 157);
+         this.gbConversao.Size = new System.Drawing.Size(593, 177);
          this.gbConversao.TabIndex = 100;
          this.gbConversao.TabStop = false;
          this.gbConversao.Text = "Conversão ";
@@ -113,7 +115,7 @@
          // label3
          // 
          this.label3.AutoSize = true;
-         this.label3.Location = new System.Drawing.Point(363, 125);
+         this.label3.Location = new System.Drawing.Point(363, 113);
          this.label3.Name = "label3";
          this.label3.RightToLeft = System.Windows.Forms.RightToLeft.No;
          this.label3.Size = new System.Drawing.Size(129, 16);
@@ -123,7 +125,7 @@
          // 
          // txtCodigoCliente
          // 
-         this.txtCodigoCliente.Location = new System.Drawing.Point(498, 121);
+         this.txtCodigoCliente.Location = new System.Drawing.Point(498, 109);
          this.txtCodigoCliente.Name = "txtCodigoCliente";
          this.txtCodigoCliente.Size = new System.Drawing.Size(76, 22);
          this.txtCodigoCliente.TabIndex = 106;
@@ -131,7 +133,7 @@
          // rbOmeupredioLocal
          // 
          this.rbOmeupredioLocal.AutoSize = true;
-         this.rbOmeupredioLocal.Location = new System.Drawing.Point(28, 126);
+         this.rbOmeupredioLocal.Location = new System.Drawing.Point(28, 114);
          this.rbOmeupredioLocal.Name = "rbOmeupredioLocal";
          this.rbOmeupredioLocal.Size = new System.Drawing.Size(245, 20);
          this.rbOmeupredioLocal.TabIndex = 105;
@@ -142,7 +144,7 @@
          // rbWorkOffice
          // 
          this.rbWorkOffice.AutoSize = true;
-         this.rbWorkOffice.Location = new System.Drawing.Point(28, 96);
+         this.rbWorkOffice.Location = new System.Drawing.Point(28, 84);
          this.rbWorkOffice.Name = "rbWorkOffice";
          this.rbWorkOffice.Size = new System.Drawing.Size(218, 20);
          this.rbWorkOffice.TabIndex = 104;
@@ -151,7 +153,7 @@
          // 
          // txtPath
          // 
-         this.txtPath.Location = new System.Drawing.Point(380, 60);
+         this.txtPath.Location = new System.Drawing.Point(381, 52);
          this.txtPath.Name = "txtPath";
          this.txtPath.ReadOnly = true;
          this.txtPath.Size = new System.Drawing.Size(194, 22);
@@ -162,7 +164,7 @@
          // 
          this.dtInicio.CustomFormat = "";
          this.dtInicio.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-         this.dtInicio.Location = new System.Drawing.Point(458, 28);
+         this.dtInicio.Location = new System.Drawing.Point(458, 24);
          this.dtInicio.Name = "dtInicio";
          this.dtInicio.Size = new System.Drawing.Size(117, 22);
          this.dtInicio.TabIndex = 2;
@@ -170,7 +172,7 @@
          // rbSCCanexos
          // 
          this.rbSCCanexos.AutoSize = true;
-         this.rbSCCanexos.Location = new System.Drawing.Point(29, 63);
+         this.rbSCCanexos.Location = new System.Drawing.Point(30, 55);
          this.rbSCCanexos.Name = "rbSCCanexos";
          this.rbSCCanexos.Size = new System.Drawing.Size(277, 20);
          this.rbSCCanexos.TabIndex = 1;
@@ -182,7 +184,7 @@
          // 
          this.rbOmeupredioTaco.AutoSize = true;
          this.rbOmeupredioTaco.Checked = true;
-         this.rbOmeupredioTaco.Location = new System.Drawing.Point(29, 28);
+         this.rbOmeupredioTaco.Location = new System.Drawing.Point(29, 24);
          this.rbOmeupredioTaco.Name = "rbOmeupredioTaco";
          this.rbOmeupredioTaco.Size = new System.Drawing.Size(246, 20);
          this.rbOmeupredioTaco.TabIndex = 0;
@@ -194,7 +196,7 @@
          // label2
          // 
          this.label2.AutoSize = true;
-         this.label2.Location = new System.Drawing.Point(430, 66);
+         this.label2.Location = new System.Drawing.Point(430, 62);
          this.label2.Name = "label2";
          this.label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
          this.label2.Size = new System.Drawing.Size(54, 16);
@@ -205,17 +207,27 @@
          // 
          this.listBox1.FormattingEnabled = true;
          this.listBox1.ItemHeight = 16;
-         this.listBox1.Location = new System.Drawing.Point(35, 199);
+         this.listBox1.Location = new System.Drawing.Point(35, 221);
          this.listBox1.Name = "listBox1";
          this.listBox1.ScrollAlwaysVisible = true;
          this.listBox1.Size = new System.Drawing.Size(593, 308);
          this.listBox1.TabIndex = 102;
          // 
+         // rbLocacaoTaco
+         // 
+         this.rbLocacaoTaco.AutoSize = true;
+         this.rbLocacaoTaco.Location = new System.Drawing.Point(28, 143);
+         this.rbLocacaoTaco.Name = "rbLocacaoTaco";
+         this.rbLocacaoTaco.Size = new System.Drawing.Size(276, 25);
+         this.rbLocacaoTaco.TabIndex = 107;
+         this.rbLocacaoTaco.Text = "Arquivos Locação (Taco /Azure)";
+         this.rbLocacaoTaco.UseVisualStyleBackColor = true;
+         // 
          // frmMain
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(642, 551);
+         this.ClientSize = new System.Drawing.Size(642, 578);
          this.Controls.Add(this.listBox1);
          this.Controls.Add(this.label2);
          this.Controls.Add(this.gbConversao);
@@ -254,6 +266,7 @@
       private System.Windows.Forms.RadioButton rbOmeupredioLocal;
       private System.Windows.Forms.Label label3;
       private System.Windows.Forms.TextBox txtCodigoCliente;
+      private System.Windows.Forms.RadioButton rbLocacaoTaco;
    }
 }
 

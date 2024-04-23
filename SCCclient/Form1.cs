@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
@@ -6,7 +7,9 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Web.UI.WebControls;
 using System.Windows.Forms;
-
+using System.Windows.Forms.VisualStyles;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace conversaoClient
 {
@@ -40,7 +43,7 @@ namespace conversaoClient
       private string sEdificio = "", sBloco = "", sApto = "";
       private string id_empresa = "", id_cliente = "", id_usuario = "";
       private string sTotal, sTotalArquivos, sEnviados, sTotalDoc, sConvertidos,
-                     sLblStatus_0, sLblStatus_1, sLblStatus_2, sLblStatus_3, sErroCatch, sDataInicio;
+                     sLblStatus_0, sLblStatus_1, sLblStatus_2, sLblStatus_3, sErroCatch, sDataInicio, sTipo = "", sId_azure = "", sId_conversaoWO = "";
       private string sTotalOcorrencias = "";
 
       private int _iBgwProgress;
@@ -334,9 +337,25 @@ namespace conversaoClient
                MessageBox.Show("Informe o código da adm e do condomínio.", "Conversão");
             }
          }
-         else
+         else if (rbLocacaoTaco.Checked) // Conversao WO SCL - TACO/AZURE
          {
-            // Conversão TACO/AZURE
+            this.dtInicio.Text = dtInicio.Value.ToShortDateString();
+            this.sCodigoAdm = this.txtCodigoAdm.Text.Trim();
+
+            DateTime localDate = DateTime.Now;
+
+            if (!this.sCodigoAdm.Trim().Equals(""))
+            {
+               this.sCodigoAdm = this.sCodigoAdm.PadLeft(8, Convert.ToChar("0"));
+               procuraClientesLocacaoAzure();
+            }
+            else
+            {
+               MessageBox.Show("Informe o código da administradora.", "Conversão");
+            }
+         }
+         else  // Conversão Omeupredio - TACO/AZURE
+         {
             this.dtInicio.Text = dtInicio.Value.ToShortDateString();
             this.sCodigoAdm = this.txtCodigoAdm.Text.Trim();
 
@@ -354,6 +373,368 @@ namespace conversaoClient
          }
       }
       #endregion
+
+
+
+      // Localiza clientes cadastrados no SCL ONLINE
+      private void procuraClientesLocacaoAzure()
+      {
+         dsClientesAzure.Clear();
+
+         if (funDB1.conectarAzure() == "OK")
+         {
+            try
+            {
+               listBox1.Items.Add("**************** Iniciando processo ****************");
+               listBox1.Items.Add("(AZURE) - Consultando clientes  de locação cadastrados...");
+
+               string sCmd = "";
+               sCmd = "EXEC SCLSP_arquivo @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                      "@modo=40";
+               SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+               da.SelectCommand.CommandTimeout = 0;
+               da.Fill(dsClientesAzure, "clientes");
+               funDB1.fecharAzure();
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("Erro no procuraClientesAzure()");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+         }
+
+         if (dsClientesAzure.Tables["clientes"].Rows.Count > 0)
+         {
+            listBox1.Items.Add("Foram localizado(s) " + dsClientesAzure.Tables["clientes"].Rows.Count.ToString() + " clientes.");
+            listBox1.Items.Add("");
+
+            procuraArquivosLocacaoTACO(dsClientesAzure);
+
+            listBox1.Items.Add("**************** Procedimento realizado! ****************");
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            MessageBox.Show("Procedimento realizado!", "Conversão");
+         }
+         else
+         {
+            MessageBox.Show("Não existe clientes no SCL online para conversão (Azure).", "Conversão");
+         }
+      }
+      //------------------------------------------------------------------------------------------------------------------//
+      #region CONVERSÃO LOCACAO - ARQUIVOS BD TACO/BD AZURE
+
+      private void procuraArquivosLocacaoTACO(DataSet dsCliente)
+      {
+         int iClientes = dsCliente.Tables["clientes"].Rows.Count;
+         sTotal = iClientes.ToString();
+
+         listBox1.Items.Add("(TACO) - Consultando registros de locação...");
+
+         // Procura registros por Cliente
+         for (int i = 0; i < iClientes; i++)
+         {
+            if (bIsCancel) { return; }
+
+            // ID_empresa e ID_cliente (Azure)
+            this.id_empresa = dsCliente.Tables["clientes"].Rows[i]["id_empresa"].ToString();
+            this.sCodigoCliente = dsCliente.Tables["clientes"].Rows[i]["codigo"].ToString().PadLeft(8, Convert.ToChar("0"));
+            this.sTipo = dsCliente.Tables["clientes"].Rows[i]["tipo"].ToString();
+            this.sId_azure = dsCliente.Tables["clientes"].Rows[i]["id"].ToString();
+            this.sId_conversaoWO = dsCliente.Tables["clientes"].Rows[i]["id_conversaoWO"].ToString();
+
+            String sCliente = "Cliente: " + dsCliente.Tables["clientes"].Rows[i]["codigo"].ToString() + "-" + dsCliente.Tables["clientes"].Rows[i]["nome"].ToString();
+
+            #region CONVERSÃO DOCUMENTOS DE LOCAÇÃO (TACO/AZURE)
+            try
+            {
+               listBox1.Items.Add("" + sCliente);
+
+               dsArquivosTACO.Clear();
+               if (funDB1.conectarTacoWO() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                            "@tipo='" + this.sTipo.ToString() + "', " +
+                            "@id=" + this.sId_conversaoWO.ToString() + ", " +
+                            "@data='" + this.dtInicio.Text + "', " +
+                            "@modo=40";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTacoWO);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsArquivosTACO, "arquivos");
+                     funDB1.fecharTacoWO();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro no procuraArquivosLocacaoTACO()");
+                  }
+                  finally
+                  {
+                     funDB1.fecharTacoWO();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro no procuraArquivosLocacaoTACO()");
+            }
+            finally
+            {
+               funDB1.fecharTacoWO();
+            }
+
+            if (dsArquivosTACO.Tables["arquivos"].Rows.Count > 0)
+            {
+               // Insere lista arquivos TACO em AZURE
+               // Retorna lista do SCL_arquivo inseridas (id_arquivo e id_conversaoTaco).
+               //DataSet dsRetornoAzure = insereArquivosLocacaoAZURE(dsArquivosTACO);
+
+               DataSet dsRetornoAzure = new DataSet();
+               dsRetornoAzure.Clear();
+               dsRetornoAzure = insereArquivosLocacaoAZURE(dsArquivosTACO);
+
+               if (dsRetornoAzure.Tables["arquivos"].Rows.Count <= 0)
+               {
+                  listBox1.Items.Add("    - Não existem registros a serem enviados.");
+               }
+               else
+               {
+                  registraLocacaoConversao(dsRetornoAzure);
+               }
+            }
+            else
+            {
+               listBox1.Items.Add("    - Não existem registros para esse cliente.");
+            }
+            #endregion
+
+            listBox1.Items.Add("");
+
+            // Faz a lista correr.
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+         }
+      }
+
+      private DataSet insereArquivosLocacaoAZURE(DataSet dsArquivosTACO)
+      {
+         dsArquivosAzure.Clear();
+
+         listBox1.Items.Add("    - Foram encontrado(s) " + dsArquivosTACO.Tables["arquivos"].Rows.Count + " arquivos.");
+         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+         int iArquivos = dsArquivosTACO.Tables["arquivos"].Rows.Count;
+         sTotalArquivos = iArquivos.ToString();
+         string sXml = "";
+
+         if (iArquivos > 0)
+         {
+            // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
+            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+            sXml = montaXMLArquivosLocacaoTACO(dsArquivosTACO);
+
+            // Envia ID_arquivoTACO (TACO) para SCC_arquivo (AZURE) .
+            // Retorna ID_arquivo oficial (AZURE)
+            try
+            {
+               listBox1.Items.Add("    - Enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+
+               if (funDB1.conectarAzure() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     sCmd = "EXEC SCLSP_arquivo @id_empresa=" + this.id_empresa + ", " +
+                            //"@id_cliente=" + this.id_cliente + ", " +
+                            "@tipo='" + this.sTipo.ToString() + "', " +
+                            "@id=" + this.sId_azure.ToString() + ", " +
+                            "@strXml='" + sXml + "', " +
+                            "@modo=41";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsArquivosAzure, "arquivos");
+                     funDB1.fecharAzure();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+                  }
+                  finally
+                  {
+                     funDB1.fecharAzure();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+
+         }
+         return dsArquivosAzure;
+      }
+
+      private string montaXMLArquivosLocacaoTACO(DataSet ds)
+      {
+         int iArquivos = ds.Tables["arquivos"].Rows.Count;
+
+         string sXml = "";
+
+         sXml = "<arquivo>";
+         sXml += "<cliente>";
+         sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
+         sXml += "<tipo>" + this.sTipo + "</tipo>";
+         sXml += "<id>" + this.sId_azure + "</id>";
+
+         for (int i = 0; i < iArquivos; i++)
+         {
+            string sId_documentosTaco = "", sId_tipoDocumento = "", sIdClienteTaco = "", sCodigoCliente = "",
+                   sNomeArquivo = "", sDescricao = "", sDataCadastro = "", sDtDocumento = "",
+                   sTipoDocumento = "", sUrlArquivo = "", sImagemType = "", sImagemSize = "", sExtensao = "";
+
+
+            sId_documentosTaco = ds.Tables["arquivos"].Rows[i]["id_documentos"].ToString();
+            sId_tipoDocumento = ds.Tables["arquivos"].Rows[i]["id_tipoDocumento"].ToString();
+            sIdClienteTaco = ds.Tables["arquivos"].Rows[i]["id_cliente"].ToString();
+            sCodigoCliente = ds.Tables["arquivos"].Rows[i]["codigoCliente"].ToString();
+            sNomeArquivo = ds.Tables["arquivos"].Rows[i]["nomeArquivo"].ToString();
+            sDescricao = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["descricao"].ToString());
+            sDataCadastro = ds.Tables["arquivos"].Rows[i]["dataCadastro"].ToString();
+            sDtDocumento = ds.Tables["arquivos"].Rows[i]["dtDocumento"].ToString();
+            sTipoDocumento = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["tipoDocumento"].ToString());
+            sUrlArquivo = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["urlArquivo"].ToString());
+            sImagemType = ds.Tables["arquivos"].Rows[i]["imagemType"].ToString();
+            sImagemSize = ds.Tables["arquivos"].Rows[i]["imagemSize"].ToString();
+
+            //// Retira a extensão do nome do arquivo
+            int iPosicaoExtensao = 0;
+            int iTam = sNomeArquivo.ToString().Length;
+            for (int t = 0; t < iTam; t++)
+            {
+               string sCaractere = sNomeArquivo.Substring(t, 1);
+               if (sCaractere.Equals("."))
+               {
+                  iPosicaoExtensao = t;
+               }
+            }
+
+            sExtensao = sNomeArquivo.Substring(iPosicaoExtensao);
+
+            if (sExtensao.Equals(""))
+            {
+               //// Retira a extensão do nome do arquivo
+               iPosicaoExtensao = 0;
+               iTam = sUrlArquivo.ToString().Length;
+               for (int t = 0; t < iTam; t++)
+               {
+                  string sCaractere = sUrlArquivo.Substring(t, 1);
+                  if (sCaractere.Equals("."))
+                  {
+                     iPosicaoExtensao = t;
+                  }
+               }
+
+               sExtensao = sUrlArquivo.Substring(iPosicaoExtensao);
+            }
+
+            ///////////////////////
+
+            sXml += "<registro>";
+
+            sXml += "<id_documentos>" + sId_documentosTaco + "</id_documentos>";
+            sXml += "<id_tipoDocumentos>" + sId_tipoDocumento + "</id_tipoDocumentos>";
+            sXml += "<id_cliente>" + sIdClienteTaco + "</id_cliente>";
+            sXml += "<codigoCliente>" + sCodigoCliente + "</codigoCliente>";
+            sXml += "<nomeArquivo>" + sNomeArquivo + "</nomeArquivo>";
+            sXml += "<descricao>" + sDescricao + "</descricao>";
+            sXml += "<dataCadastro>" + sDataCadastro + "</dataCadastro>";
+            sXml += "<dtDocumento>" + sDtDocumento + "</dtDocumento>";
+            sXml += "<tipoDocumento>" + sTipoDocumento + "</tipoDocumento>";
+            sXml += "<urlArquivo>" + sUrlArquivo + "</urlArquivo>";
+            sXml += "<imagemType>" + sImagemType + "</imagemType>";
+            sXml += "<imagemSize>" + sImagemSize + "</imagemSize>";
+            sXml += "<extensao>" + sExtensao + "</extensao>";
+
+            sXml += "</registro>";
+
+         }
+         sXml += "</cliente>";
+         sXml += "</arquivo>";
+
+
+         return sXml;
+      }
+
+      private void registraLocacaoConversao(DataSet ds)
+      {
+
+         int iArquivos = ds.Tables["arquivos"].Rows.Count;
+         string sXml = "";
+
+         sXml = "<arquivo>";
+         sXml += "<cliente>";
+
+         for (int i = 0; i < iArquivos; i++)
+         {
+            string sId_documentosTaco = ds.Tables["arquivos"].Rows[i]["id_conversaoTaco"].ToString(); ;
+            string sId_arquivoAzure = ds.Tables["arquivos"].Rows[i]["id_arquivo"].ToString(); ;
+
+            sXml += "<registro>";
+            sXml += "<id_documentos>" + sId_documentosTaco + "</id_documentos>"; // TACO
+            sXml += "<id_arquivo>" + sId_arquivoAzure + "</id_arquivo>"; // AZURE
+            sXml += "</registro>";
+         }
+
+         sXml += "</cliente>";
+         sXml += "</arquivo>";
+
+         try
+         {
+            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
+
+            if (funDB1.conectarTacoWO() == "OK")
+            {
+               try
+               {
+
+                  string sCmd = "";
+                  sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                         "@strXml='" + sXml + "', " +
+                         "@modo=41";
+
+                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTacoWO);
+                  da.SelectCommand.CommandTimeout = 0;
+                  da.Fill(dsArquivosAzure, "arquivoOK");
+                  funDB1.fecharTacoWO();
+
+               }
+               catch (SqlException ex)
+               {
+                  listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+               }
+               finally
+               {
+                  funDB1.fecharTacoWO();
+               }
+            }
+         }
+         catch (SqlException ex)
+         {
+            listBox1.Items.Add("    - Erro ao regitsrar TACO - id_documentos");
+         }
+      }
+
+      #endregion
+      //------------------------------------------------------------------------------------------------------------------//
+
 
       // Localiza clientes cadastrados no SCC ONLINE
       private void procuraClientesAzure()
@@ -419,7 +800,7 @@ namespace conversaoClient
       }
 
       //------------------------------------------------------------------------------------------------------------------//
-      #region CONVERSÃO ARQUIVOS  BD TACO/BD AZURE
+      #region CONVERSÃO OMEUPREDIO - ARQUIVOS  BD TACO/BD AZURE
 
       private void procuraArquivosTACO(DataSet dsCliente)
       {
@@ -1250,7 +1631,7 @@ namespace conversaoClient
       }
       #endregion
       //------------------------------------------------------------------------------------------------------------------//
-      #region CONVERSÃO ARQUIVOS LOCAL/AZURE
+      #region CONVERSÃO SCC4W - ARQUIVOS LOCAL/AZURE
       public Collection<string[]> arrayListaArquivos = new Collection<string[]>();
 
       //public string sPath = "C:\\PRG\\SCC\\ANEXOS\\";
