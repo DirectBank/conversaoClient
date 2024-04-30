@@ -42,14 +42,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="conversaoClient.exe" size="79360">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="conversaoClient.exe" size="79872">
       <assemblyIdentity name="conversaoClient" version="1.0.0.0" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>I0S57X3aVMJBQZrPtLpG2hHEjwk5sWhKEyYiFh5IjpQ=</dsig:DigestValue>
+        <dsig:DigestValue>p0gJz/UrsnotlvzlQ74D23lw1os8mcaaf3TVs92Axdo=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

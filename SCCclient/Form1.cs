@@ -754,6 +754,11 @@ namespace conversaoClient
                       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
                       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 ORDER BY cli.codigo ";
 
+               //sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
+               //       "FROM WO_cliente cli " +
+               //       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
+               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000069' ORDER BY cli.codigo ";
+
                SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
                da.SelectCommand.CommandTimeout = 0;
                da.Fill(dsClientesAzure, "clientes");
@@ -1578,7 +1583,7 @@ namespace conversaoClient
          for (int i = 0; i < iArquivos; i++)
          {
             string sId_arquivoTaco = "", sId_usuario = "", sBloco = "", sApto = "", sDescricaoTipo = "", sData = "",
-                   sDescricao = "", sNome = "", sExtensao = "", sTamanho = "";
+                   sDescricao = "", sNome = "", sExtensao = "", sTamanho = "", sUrlArquivo="";
 
             sId_arquivoTaco = ds.Tables["arquivos"].Rows[i]["id_arquivo"].ToString();
             sId_usuario = ds.Tables["arquivos"].Rows[i]["id_usuario"].ToString();
@@ -1590,6 +1595,7 @@ namespace conversaoClient
             sNome = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["nome"].ToString());
             sTamanho = ds.Tables["arquivos"].Rows[i]["tamanho"].ToString();
             sExtensao = ds.Tables["arquivos"].Rows[i]["extensao"].ToString();
+            sUrlArquivo = ds.Tables["arquivos"].Rows[i]["urlArquivo"].ToString();
 
             // Retira a extensão do nome do arquivo
             int iPosicaoExtensao = 0;
@@ -1619,6 +1625,7 @@ namespace conversaoClient
             sXml += "<nome>" + sNome + "</nome>";
             sXml += "<tamanho>" + sTamanho + "</tamanho>";
             sXml += "<extensao>" + sExtensao + "</extensao>";
+            sXml += "<urlArquivo>" + sUrlArquivo + "</urlArquivo>";
 
             sXml += "</registro>";
 
