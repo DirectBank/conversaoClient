@@ -261,8 +261,8 @@ public class Funcoes
 
    public string LimpaLinha(string sTexto)
    {
-      string sComAcento = "ÁÉÍÓÚáéíóúÀÈÌÒÙàèìòùÂÊÎÔÛâêîôûÄËÏÖÜäëïöüÃÕãõÇçÑñºª'&°´–¸§µ";
-      string sSemAcento = "AEIOUaeiouAEIOUaeiouAEIOUaeiouAEIOUaeiouAOaoCcNnoa e  -   ";
+      string sComAcento = "ÁÉÍÓÚáéíóúÀÈÌÒÙàèìòùÂÊÎÔÛâêîôûÄËÏÖÜäëïöüÃÕãõÇçÑñºª'&°´–¸§µ“”";
+      string sSemAcento = "AEIOUaeiouAEIOUaeiouAEIOUaeiouAEIOUaeiouAOaoCcNnoa e  -     ";
       string sNovoTexto = "";
       for (int i = 0; i <= (sTexto.Length - 1); i++)
          if (sComAcento.IndexOf(sTexto.Substring(i, 1)) >= 0)

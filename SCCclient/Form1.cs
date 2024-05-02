@@ -35,7 +35,7 @@ namespace conversaoClient
       private DateTime dDataInclusao, dDataParaEnviar, dDataHoje;
 
       //private string sVersao = "21.07.16.16:30"; //ano.mes.dia.hora
-      private string sVersao = "24.03.21.16:00"; //ano.mes.dia.hora
+      private string sVersao = "24.05.02.16:00"; //ano.mes.dia.hora
 
       private BackgroundWorker bgw;
       private bool bIsCancel = false;
@@ -757,7 +757,7 @@ namespace conversaoClient
                //sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
                //       "FROM WO_cliente cli " +
                //       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
-               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000069' ORDER BY cli.codigo ";
+               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000247' ORDER BY cli.codigo ";
 
                SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
                da.SelectCommand.CommandTimeout = 0;
