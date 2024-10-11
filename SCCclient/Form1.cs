@@ -389,7 +389,8 @@ namespace conversaoClient
                listBox1.Items.Add("(AZURE) - Consultando clientes  de locação cadastrados...");
 
                string sCmd = "";
-               sCmd = "EXEC SCLSP_arquivo @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+               //sCmd = "EXEC SCLSP_arquivo @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+               sCmd = "EXEC SCLSP_arquivo @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
                       "@modo=40";
                SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
                da.SelectCommand.CommandTimeout = 0;
@@ -457,7 +458,8 @@ namespace conversaoClient
                   try
                   {
                      string sCmd = "";
-                     sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                     //sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                     sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
                             "@tipo='" + this.sTipo.ToString() + "', " +
                             "@id=" + this.sId_conversaoWO.ToString() + ", " +
                             "@data='" + this.dtInicio.Text + "', " +
@@ -706,7 +708,8 @@ namespace conversaoClient
                {
 
                   string sCmd = "";
-                  sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                  //sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                        sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +     
                          "@strXml='" + sXml + "', " +
                          "@modo=41";
 
@@ -837,7 +840,8 @@ namespace conversaoClient
                   try
                   {
                      string sCmd = "";
-                     sCmd = "EXEC OMPSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                     //sCmd = "EXEC OMPSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                     sCmd = "EXEC OMPSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
                             "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
                             "@data1='" + this.dtInicio.Text + "', " +
                             "@modo=50";
@@ -899,11 +903,12 @@ namespace conversaoClient
                   try
                   {
                      string sCmd = "";
-                     sCmd = "EXEC OMPSP_ocorrencia @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
-                            "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
-                            "@data1='" + this.dtInicio.Text + "', " +
-                            "@isRel=1, " +
-                            "@modo=12";
+                     //sCmd = "EXEC OMPSP_ocorrencia @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                     sCmd = "EXEC OMPSP_ocorrencia @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
+                        "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
+                        "@data1='" + this.dtInicio.Text + "', " +
+                        "@isRel=1, " +
+                        "@modo=12";
 
                      SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
                      da.SelectCommand.CommandTimeout = 0;
@@ -1583,7 +1588,7 @@ namespace conversaoClient
          for (int i = 0; i < iArquivos; i++)
          {
             string sId_arquivoTaco = "", sId_usuario = "", sBloco = "", sApto = "", sDescricaoTipo = "", sData = "",
-                   sDescricao = "", sNome = "", sExtensao = "", sTamanho = "", sUrlArquivo="";
+                   sDescricao = "", sNome = "", sExtensao = "", sTamanho = "", sUrlArquivo = "";
 
             sId_arquivoTaco = ds.Tables["arquivos"].Rows[i]["id_arquivo"].ToString();
             sId_usuario = ds.Tables["arquivos"].Rows[i]["id_usuario"].ToString();
