@@ -29,6 +29,9 @@ namespace conversaoClient
       DataSet dsOcorrenciasTACO = new DataSet();
       DataSet dsOcorrenciasAzure = new DataSet();
 
+      DataSet dsEncomendasTACO = new DataSet();
+      DataSet dsEncomendasAzure = new DataSet();
+
       // DataSet para conversão de foto dos usuarios Workoffice
       DataSet dsUsuariosWorkoffice = new DataSet();
 
@@ -44,7 +47,7 @@ namespace conversaoClient
       private string id_empresa = "", id_cliente = "", id_usuario = "";
       private string sTotal, sTotalArquivos, sEnviados, sTotalDoc, sConvertidos,
                      sLblStatus_0, sLblStatus_1, sLblStatus_2, sLblStatus_3, sErroCatch, sDataInicio, sTipo = "", sId_azure = "", sId_conversaoWO = "";
-      private string sTotalOcorrencias = "";
+      private string sTotalOcorrencias = "", sTotalEncomendas = "";
 
       private int _iBgwProgress;
 
@@ -709,9 +712,9 @@ namespace conversaoClient
 
                   string sCmd = "";
                   //sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
-                        sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +     
-                         "@strXml='" + sXml + "', " +
-                         "@modo=41";
+                  sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
+                   "@strXml='" + sXml + "', " +
+                   "@modo=41";
 
                   SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTacoWO);
                   da.SelectCommand.CommandTimeout = 0;
@@ -760,7 +763,7 @@ namespace conversaoClient
                //sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
                //       "FROM WO_cliente cli " +
                //       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
-               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000247' ORDER BY cli.codigo ";
+               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000025' ORDER BY cli.codigo ";
 
                SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
                da.SelectCommand.CommandTimeout = 0;
@@ -908,7 +911,7 @@ namespace conversaoClient
                         "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
                         "@data1='" + this.dtInicio.Text + "', " +
                         "@isRel=1, " +
-                        "@modo=12";
+                        "@modo=20";
 
                      SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
                      da.SelectCommand.CommandTimeout = 0;
@@ -962,12 +965,385 @@ namespace conversaoClient
             }
             #endregion
 
+
+            #region CONVERSÃO ENCOMENDAS  (TACO/AZURE)
+            try
+            {
+               listBox1.Items.Add("" + sCliente);
+
+               dsEncomendasTACO.Clear();
+               if (funDB1.conectarTaco() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     sCmd = "EXEC OMPSP_encomenda @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
+                        "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
+                        "@dataInicio='" + this.dtInicio.Text + "', " +
+                        "@modo=20";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsEncomendasTACO, "encomendas");
+                     funDB1.fecharTaco();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro no procuraEncomendasTACO()");
+                  }
+                  finally
+                  {
+                     funDB1.fecharTaco();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro no procuraEncomendasTACO()");
+            }
+            finally
+            {
+               funDB1.fecharTaco();
+            }
+
+            if (dsEncomendasTACO.Tables.Count > 0)
+            {
+               if (dsEncomendasTACO.Tables["encomendas"].Rows.Count > 0)
+               {
+                  // Insere lista encomendas TACO em AZURE
+                  // Retorna lista do OM_encomenda inseridas.
+                  DataSet dsRetornoAzure = insereEncomendasAZURE(dsEncomendasTACO);
+                  if (dsRetornoAzure.Tables.Count > 0)
+                  {
+                     if (dsRetornoAzure.Tables["encomendas"].Rows.Count > 0)
+                     {
+                        // Percorre lista de encomendas AZURE e localiza encomendas arquivo bytes TACO
+                        // Envia para o Firebase
+                        procuraEncomendasBinarioTaco(dsRetornoAzure);
+                     }
+                     else
+                     {
+                        listBox1.Items.Add("    - Não existem registros de encomendas a serem enviados.");
+                     }
+                  }
+               }
+               else
+               {
+                  listBox1.Items.Add("    - Não existem registros de encomendas para esse cliente.");
+               }
+            }
+            #endregion
+
             listBox1.Items.Add("");
 
             // Faz a lista correr.
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
          }
       }
+
+      // ----------------------------- Encomendas ---------------------------------
+      private DataSet insereEncomendasAZURE(DataSet dsEncomendasTACO)
+      {
+         dsEncomendasAzure.Clear();
+
+         listBox1.Items.Add("    - Foram encontrado(s) " + dsEncomendasTACO.Tables["encomendas"].Rows.Count + " encomendas.");
+         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+         int iEncomendas = dsEncomendasTACO.Tables["encomendas"].Rows.Count;
+         sTotalEncomendas = iEncomendas.ToString();
+         string sXml = "";
+
+         if (iEncomendas > 0)
+         {
+            // Monta o XML com a Lista de id_encomenda (TACO) a ser enviada.
+            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+            sXml = montaXMLEncomendasTACO(dsEncomendasTACO);
+
+            // Envia ID_encomendaTACO (TACO) para OM_encomenda (AZURE) .
+            try
+            {
+               listBox1.Items.Add("    - Enviando lista de encomendas TACO/AZURE (insereEncomendasAZURE)");
+
+               if (funDB1.conectarAzure() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     // Voltar Aqui....
+                     sCmd = "EXEC OMPSP_encomenda @id_empresa=" + this.id_empresa + ", " +
+                            "@id_cliente=" + this.id_cliente + ", " +
+                            "@strXml='" + sXml + "', " +
+                            "@modo=30";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsEncomendasAzure, "encomendas");
+                     funDB1.fecharAzure();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro 1 enviando lista de encomendas TACO/AZURE (insereEncomendasAZURE)");
+                  }
+                  finally
+                  {
+                     funDB1.fecharAzure();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro 2 enviando lista de encomendas TACO/AZURE (insereEncomendasAZURE)");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+         }
+
+         return dsEncomendasAzure;
+      }
+      private string montaXMLEncomendasTACO(DataSet ds)
+      {
+         int iEncomendas = ds.Tables["encomendas"].Rows.Count;
+
+         string sXml = "";
+
+         sXml = "<encomendas>";
+         sXml += "<cliente>";
+         sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
+         sXml += "<id_cliente>" + this.id_cliente + "</id_cliente>";
+
+         for (int i = 0; i < iEncomendas; i++)
+         {
+            string sId_encomendaTaco = "", sId_usuario = "", sTipo = "", sBloco = "", sApto = "", sNome = "",
+                   sLocal = "", sObservacao = "", sDataCadastro = "", sTemFoto = "",
+                   sId_tipoEncomenda = "", sNomeTipoEncomenda = "", sEspacoEncomenda = "";
+
+            sId_encomendaTaco = ds.Tables["encomendas"].Rows[i]["id_encomenda"].ToString();
+            sId_usuario = ds.Tables["encomendas"].Rows[i]["id_usuario"].ToString();
+            sTipo = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["tipo"].ToString());
+            sBloco = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["bloco"].ToString());
+            sApto = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["apto"].ToString());
+            sNome = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["nome"].ToString());
+            sLocal = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["local"].ToString());
+            sObservacao = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["observacao"].ToString());
+            sDataCadastro = ds.Tables["encomendas"].Rows[i]["dataCadastro"].ToString();
+            sTemFoto = ds.Tables["encomendas"].Rows[i]["temFoto"].ToString();
+            sId_tipoEncomenda = ds.Tables["encomendas"].Rows[i]["id_tipoEncomenda"].ToString();
+            sNomeTipoEncomenda = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["nomeTipoEncomenda"].ToString());
+            sEspacoEncomenda = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["espacoEncomenda"].ToString());
+
+            sXml += "<registro>";
+            sXml += "<id_encomendaTaco>" + sId_encomendaTaco + "</id_encomendaTaco>";
+            sXml += "<id_usuario>" + sId_usuario + "</id_usuario>";
+            sXml += "<tipo>" + sTipo + "</tipo>";
+            sXml += "<bloco>" + sBloco + "</bloco>";
+            sXml += "<apto>" + sApto + "</apto>";
+            sXml += "<nome>" + sNome + "</nome>";
+            sXml += "<local>" + sLocal + "</local>";
+            sXml += "<observacao>" + sObservacao + "</observacao>";
+            sXml += "<dataCadastro>" + sDataCadastro + "</dataCadastro>";
+            sXml += "<temFoto>" + sTemFoto + "</temFoto>";
+            sXml += "<id_tipoEncomenda>" + sId_tipoEncomenda + "</id_tipoEncomenda>";
+            sXml += "<nomeTipoEncomenda>" + sNomeTipoEncomenda + "</nomeTipoEncomenda>";
+            sXml += "<espacoEncomenda>" + sEspacoEncomenda + "</espacoEncomenda>";
+            sXml += "</registro>";
+         }
+         sXml += "</cliente>";
+         sXml += "</encomendas>";
+
+         return sXml;
+      }
+
+      private void procuraEncomendasBinarioTaco(DataSet dsRetornoEncomendasAzure)
+      {
+         listBox1.Items.Add("    - Procura arquivo binário (TACO).");
+
+         string sNomeArquivoEditado = "";
+         int iEncomendas = dsRetornoEncomendasAzure.Tables["encomendas"].Rows.Count;
+
+         // Procura arquivos por Cliente
+         for (int a = 0; a < iEncomendas; a++)
+         {
+            if (bIsCancel) { return; }
+
+            //dsOcorrenciasTACO.Clear();
+            dsArquivosTACO.Clear();
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+            try
+            {
+               if (funDB1.conectarTaco() == "OK")
+               {
+                  try
+                  {
+                     string sId_encomendaTaco = dsRetornoEncomendasAzure.Tables["encomendas"].Rows[a]["id_encomendaTaco"].ToString();
+                     string sId_encomendaAzure = dsRetornoEncomendasAzure.Tables["encomendas"].Rows[a]["id_encomenda"].ToString();
+                     sNomeArquivoEditado = sId_encomendaAzure.ToString(); // Não tem nome de arquivo, aderiri o ID
+                     string sUrlArquivo = dsRetornoEncomendasAzure.Tables["encomendas"].Rows[a]["urlArquivo"].ToString(); ; // Se tivesse no Firebase (Taco), viria a informação...não é o caso.
+
+                     listBox1.Items.Add("");
+
+                     listBox1.Items.Add("       " + DateTime.Now.ToString("dd/mm/yyyy H:mm:ss"));
+                     listBox1.Items.Add("       ******* (TACO) id_encomenda: " + sId_encomendaTaco + " - (AZURE) id_encomenda : " + sId_encomendaAzure + " *******");
+                     listBox1.Items.Add("       - (TACO) Buscando arquivo byte.");
+
+                     string sCmd = "";
+                     // VOLTAR AQUI
+                     sCmd = "EXEC OMPSP_encomenda @id_encomenda=" + sId_encomendaTaco + ", " +
+                            "@modo=8";
+                     Boolean bSegue = false;
+                     try
+                     {
+                        SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
+                        da.SelectCommand.CommandTimeout = 0;
+                        da.Fill(dsArquivosTACO, "arquivos");
+                        bSegue = true;
+                     }
+                     catch (Exception ex)
+                     {
+                        bSegue = false;
+                     }
+                     finally
+                     {
+                        funDB1.fecharTaco();
+                     }
+
+
+                     if (dsArquivosTACO.Tables["arquivos"].Rows.Count > 0)
+                     {
+                        listBox1.Items.Add("       - (TACO) - Localizado arquivo encomenda.");
+
+                        byte[] arquivoM = new byte[0];
+                        DataRow linhaM = dsArquivosTACO.Tables[0].Rows[0];
+                        arquivoM = (byte[])linhaM["imagem"];
+
+                        // Enviar o Bytes para o FIREBASE.
+                        // Sobe para o Firebase o documento
+                        if (Convert.ToInt32(sId_encomendaTaco) > 0 && bSegue)
+                        {
+                           listBox1.Items.Add("       - (Firebase) Enviando arquivo...");
+
+                           // Faz a rolagem da lista
+                           listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                           string sArquivoCompleto = sUrlArquivo;
+                           //string sMimeType = funDrive1.retornaMimeType(sExtensao);
+                           string sMimeType = "image/jpeg";
+
+                           if (!funDrive1.uploadSCCToDrive(sArquivoCompleto, sMimeType, arquivoM))
+                           {
+                              listBox1.Items.Add("          - Já realizado envio anteriormente");
+                           }
+                           else
+                           {
+                              listBox1.Items.Add("          - Enviado!");
+                           }
+
+
+                           // Faz a rolagem da lista
+                           listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                           // Pausa de 2 segundos, evitar TimeOut.
+                           System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2));
+                        }
+                        //}
+                     }
+                     else
+                     {
+                        listBox1.Items.Add("       - (TACO) - Não localizado arquivo byte");
+                     }
+
+                     registraConversaoEncomenda(sId_encomendaAzure);
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 2");
+                  }
+                  finally
+                  {
+                     funDB1.fecharTaco();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 3");
+            }
+            finally
+            {
+               funDB1.fecharTaco();
+            }
+
+            // Faz a lista correr.
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+         }
+      }
+
+      private DataSet insereArquivosEncomendasAZURE(DataSet dsArquivosTACO)
+      {
+         dsArquivosAzure.Clear();
+
+         listBox1.Items.Add("    - Foram encontrado(s) " + dsArquivosTACO.Tables["arquivos"].Rows.Count + " arquivos.");
+         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+         int iArquivos = dsArquivosTACO.Tables["arquivos"].Rows.Count;
+         sTotalArquivos = iArquivos.ToString();
+         string sXml = "";
+
+         if (iArquivos > 0)
+         {
+            // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
+            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+            sXml = montaXMLArquivosTACO(dsArquivosTACO);
+
+            // Envia ID_arquivoTACO (TACO) para SCC_arquivo (AZURE) .
+            // Retorna ID_arquivo oficial (AZURE)
+            try
+            {
+               listBox1.Items.Add("    - Enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+
+               if (funDB1.conectarAzure() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     sCmd = "EXEC SCCSP_arquivo @id_empresa=" + this.id_empresa + ", " +
+                            "@id_cliente=" + this.id_cliente + ", " +
+                            "@strXml='" + sXml + "', " +
+                            "@modo=20";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsArquivosAzure, "arquivos");
+                     funDB1.fecharAzure();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+                  }
+                  finally
+                  {
+                     funDB1.fecharAzure();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+
+         }
+
+         return dsArquivosAzure;
+      }
+
+      // ---------------------------------------------------------------------------
+
 
       private DataSet insereOcorrenciasAZURE(DataSet dsOcorrenciasTACO)
       {
@@ -2115,6 +2491,44 @@ namespace conversaoClient
          catch (SqlException ex)
          {
             listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_ocorrencia: " + sId_ocorrencia);
+         }
+
+      }
+      private void registraConversaoEncomenda(string sId_encomenda)
+      {
+         try
+         {
+            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
+
+            if (funDB1.conectarAzure() == "OK")
+            {
+               try
+               {
+
+                  string sCmd = "";
+                  sCmd = "EXEC OMPSP_encomenda @id_empresa = " + this.id_empresa + ", " +
+                         " @id_encomenda=" + sId_encomenda + ", " +
+                         "@modo=31";
+
+                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                  da.SelectCommand.CommandTimeout = 0;
+                  da.Fill(dsArquivosAzure, "encomendaOK");
+                  funDB1.fecharAzure();
+
+               }
+               catch (SqlException ex)
+               {
+                  listBox1.Items.Add("    - Erro enviando lista de encomendas TACO/AZURE (insereEncomendasAZURE)");
+               }
+               finally
+               {
+                  funDB1.fecharAzure();
+               }
+            }
+         }
+         catch (SqlException ex)
+         {
+            listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_encomenda: " + sId_encomenda);
          }
 
       }
