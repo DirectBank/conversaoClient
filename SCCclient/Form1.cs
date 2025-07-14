@@ -32,6 +32,10 @@ namespace conversaoClient
       DataSet dsEncomendasTACO = new DataSet();
       DataSet dsEncomendasAzure = new DataSet();
 
+      DataSet dsColaboradoresTACO = new DataSet();
+      DataSet dsColaboradoresAzure = new DataSet();
+
+
       // DataSet para conversão de foto dos usuarios Workoffice
       DataSet dsUsuariosWorkoffice = new DataSet();
 
@@ -47,7 +51,7 @@ namespace conversaoClient
       private string id_empresa = "", id_cliente = "", id_usuario = "";
       private string sTotal, sTotalArquivos, sEnviados, sTotalDoc, sConvertidos,
                      sLblStatus_0, sLblStatus_1, sLblStatus_2, sLblStatus_3, sErroCatch, sDataInicio, sTipo = "", sId_azure = "", sId_conversaoWO = "";
-      private string sTotalOcorrencias = "", sTotalEncomendas = "";
+      private string sTotalOcorrencias = "", sTotalEncomendas = "", sTotalColaboradores = "";
 
       private int _iBgwProgress;
 
@@ -57,16 +61,7 @@ namespace conversaoClient
       public frmMain()
       {
          InitializeComponent();
-
          Text = "Conversão Arquivos - Versão: " + sVersao;
-
-         //bgw = new BackgroundWorker();
-         //bgw.WorkerReportsProgress = true;
-         //bgw.WorkerSupportsCancellation = true;
-         //bgw.DoWork += new DoWorkEventHandler(bgw_DoWork);
-         //bgw.ProgressChanged += new ProgressChangedEventHandler(bgw_ProgressChanged);
-         //bgw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgw_RunWorkerCompleted);
-
       }
 
       private void frmMain_Load(object sender, EventArgs e)
@@ -112,7 +107,6 @@ namespace conversaoClient
       {
 
       }
-
       private void registraConversaoWO(String sId_empresa, string sId_usuario, String sUrlFotoUsuario)
       {
          try
@@ -377,7 +371,73 @@ namespace conversaoClient
       }
       #endregion
 
+      // Localiza clientes cadastrados no SCC ONLINE
+      private void procuraClientesAzure()
+      {
+         dsClientesAzure.Clear();
 
+         if (funDB1.conectarAzure() == "OK")
+         {
+            try
+            {
+               listBox1.Items.Add("**************** Iniciando processo ****************");
+               listBox1.Items.Add("(AZURE) - Consultando clientes cadastrados...");
+
+               string sCmd = "";
+               sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
+                      "FROM WO_cliente cli " +
+                      "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
+                      "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 ORDER BY cli.codigo ";
+
+               //sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
+               //       "FROM WO_cliente cli " +
+               //       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
+               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000022' ORDER BY cli.codigo ";
+
+               SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+               da.SelectCommand.CommandTimeout = 0;
+               da.Fill(dsClientesAzure, "clientes");
+               funDB1.fecharAzure();
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("Erro no procuraClientesAzure()");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+         }
+
+         if (dsClientesAzure.Tables["clientes"].Rows.Count > 0)
+         {
+            listBox1.Items.Add("Foram localizado(s) " + dsClientesAzure.Tables["clientes"].Rows.Count.ToString() + " clientes.");
+            listBox1.Items.Add("");
+
+            // Conversão de arquivos Omeupredio TACO para AZURE
+            if (rbOmeupredioTaco.Checked)
+            {
+               procuraArquivosTACO(dsClientesAzure);
+
+               listBox1.Items.Add("**************** Procedimento realizado! ****************");
+               listBox1.SelectedIndex = listBox1.Items.Count - 1;
+               MessageBox.Show("Procedimento realizado!", "Conversão");
+            }
+            else
+            {
+               //// Conversão de arquivos locais \PRG\SCC\ANEXOS\ para AZURE
+               procuraArquivosLOCAL(dsClientesAzure);
+
+               listBox1.Items.Add("**************** Procedimento realizado! ****************");
+               listBox1.SelectedIndex = listBox1.Items.Count - 1;
+               MessageBox.Show("Procedimento realizado!", "Conversão");
+            }
+         }
+         else
+         {
+            MessageBox.Show("Não existe clientes no SCC online / Unidadez para conversão (Azure).", "Conversão");
+         }
+      }
 
       // Localiza clientes cadastrados no SCL ONLINE
       private void procuraClientesLocacaoAzure()
@@ -424,389 +484,6 @@ namespace conversaoClient
          else
          {
             MessageBox.Show("Não existe clientes no SCL online para conversão (Azure).", "Conversão");
-         }
-      }
-      //------------------------------------------------------------------------------------------------------------------//
-      #region CONVERSÃO LOCACAO - ARQUIVOS BD TACO/BD AZURE
-
-      private void procuraArquivosLocacaoTACO(DataSet dsCliente)
-      {
-         int iClientes = dsCliente.Tables["clientes"].Rows.Count;
-         sTotal = iClientes.ToString();
-
-         listBox1.Items.Add("(TACO) - Consultando registros de locação...");
-
-         // Procura registros por Cliente
-         for (int i = 0; i < iClientes; i++)
-         {
-            if (bIsCancel) { return; }
-
-            // ID_empresa e ID_cliente (Azure)
-            this.id_empresa = dsCliente.Tables["clientes"].Rows[i]["id_empresa"].ToString();
-            this.sCodigoCliente = dsCliente.Tables["clientes"].Rows[i]["codigo"].ToString().PadLeft(8, Convert.ToChar("0"));
-            this.sTipo = dsCliente.Tables["clientes"].Rows[i]["tipo"].ToString();
-            this.sId_azure = dsCliente.Tables["clientes"].Rows[i]["id"].ToString();
-            this.sId_conversaoWO = dsCliente.Tables["clientes"].Rows[i]["id_conversaoWO"].ToString();
-
-            String sCliente = "Cliente: " + dsCliente.Tables["clientes"].Rows[i]["codigo"].ToString() + "-" + dsCliente.Tables["clientes"].Rows[i]["nome"].ToString();
-
-            #region CONVERSÃO DOCUMENTOS DE LOCAÇÃO (TACO/AZURE)
-            try
-            {
-               listBox1.Items.Add("" + sCliente);
-
-               dsArquivosTACO.Clear();
-               if (funDB1.conectarTacoWO() == "OK")
-               {
-                  try
-                  {
-                     string sCmd = "";
-                     //sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
-                     sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
-                            "@tipo='" + this.sTipo.ToString() + "', " +
-                            "@id=" + this.sId_conversaoWO.ToString() + ", " +
-                            "@data='" + this.dtInicio.Text + "', " +
-                            "@modo=40";
-
-                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTacoWO);
-                     da.SelectCommand.CommandTimeout = 0;
-                     da.Fill(dsArquivosTACO, "arquivos");
-                     funDB1.fecharTacoWO();
-                  }
-                  catch (SqlException ex)
-                  {
-                     listBox1.Items.Add("    - Erro no procuraArquivosLocacaoTACO()");
-                  }
-                  finally
-                  {
-                     funDB1.fecharTacoWO();
-                  }
-               }
-            }
-            catch (SqlException ex)
-            {
-               listBox1.Items.Add("    - Erro no procuraArquivosLocacaoTACO()");
-            }
-            finally
-            {
-               funDB1.fecharTacoWO();
-            }
-
-            if (dsArquivosTACO.Tables["arquivos"].Rows.Count > 0)
-            {
-               // Insere lista arquivos TACO em AZURE
-               // Retorna lista do SCL_arquivo inseridas (id_arquivo e id_conversaoTaco).
-               //DataSet dsRetornoAzure = insereArquivosLocacaoAZURE(dsArquivosTACO);
-
-               DataSet dsRetornoAzure = new DataSet();
-               dsRetornoAzure.Clear();
-               dsRetornoAzure = insereArquivosLocacaoAZURE(dsArquivosTACO);
-
-               if (dsRetornoAzure.Tables["arquivos"].Rows.Count <= 0)
-               {
-                  listBox1.Items.Add("    - Não existem registros a serem enviados.");
-               }
-               else
-               {
-                  registraLocacaoConversao(dsRetornoAzure);
-               }
-            }
-            else
-            {
-               listBox1.Items.Add("    - Não existem registros para esse cliente.");
-            }
-            #endregion
-
-            listBox1.Items.Add("");
-
-            // Faz a lista correr.
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
-         }
-      }
-
-      private DataSet insereArquivosLocacaoAZURE(DataSet dsArquivosTACO)
-      {
-         dsArquivosAzure.Clear();
-
-         listBox1.Items.Add("    - Foram encontrado(s) " + dsArquivosTACO.Tables["arquivos"].Rows.Count + " arquivos.");
-         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
-
-         int iArquivos = dsArquivosTACO.Tables["arquivos"].Rows.Count;
-         sTotalArquivos = iArquivos.ToString();
-         string sXml = "";
-
-         if (iArquivos > 0)
-         {
-            // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
-            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
-            sXml = montaXMLArquivosLocacaoTACO(dsArquivosTACO);
-
-            // Envia ID_arquivoTACO (TACO) para SCC_arquivo (AZURE) .
-            // Retorna ID_arquivo oficial (AZURE)
-            try
-            {
-               listBox1.Items.Add("    - Enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-
-               if (funDB1.conectarAzure() == "OK")
-               {
-                  try
-                  {
-                     string sCmd = "";
-                     sCmd = "EXEC SCLSP_arquivo @id_empresa=" + this.id_empresa + ", " +
-                            //"@id_cliente=" + this.id_cliente + ", " +
-                            "@tipo='" + this.sTipo.ToString() + "', " +
-                            "@id=" + this.sId_azure.ToString() + ", " +
-                            "@strXml='" + sXml + "', " +
-                            "@modo=41";
-
-                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
-                     da.SelectCommand.CommandTimeout = 0;
-                     da.Fill(dsArquivosAzure, "arquivos");
-                     funDB1.fecharAzure();
-                  }
-                  catch (SqlException ex)
-                  {
-                     listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-                  }
-                  finally
-                  {
-                     funDB1.fecharAzure();
-                  }
-               }
-            }
-            catch (SqlException ex)
-            {
-               listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-            }
-            finally
-            {
-               funDB1.fecharAzure();
-            }
-
-         }
-         return dsArquivosAzure;
-      }
-
-      private string montaXMLArquivosLocacaoTACO(DataSet ds)
-      {
-         int iArquivos = ds.Tables["arquivos"].Rows.Count;
-
-         string sXml = "";
-
-         sXml = "<arquivo>";
-         sXml += "<cliente>";
-         sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
-         sXml += "<tipo>" + this.sTipo + "</tipo>";
-         sXml += "<id>" + this.sId_azure + "</id>";
-
-         for (int i = 0; i < iArquivos; i++)
-         {
-            string sId_documentosTaco = "", sId_tipoDocumento = "", sIdClienteTaco = "", sCodigoCliente = "",
-                   sNomeArquivo = "", sDescricao = "", sDataCadastro = "", sDtDocumento = "",
-                   sTipoDocumento = "", sUrlArquivo = "", sImagemType = "", sImagemSize = "", sExtensao = "";
-
-
-            sId_documentosTaco = ds.Tables["arquivos"].Rows[i]["id_documentos"].ToString();
-            sId_tipoDocumento = ds.Tables["arquivos"].Rows[i]["id_tipoDocumento"].ToString();
-            sIdClienteTaco = ds.Tables["arquivos"].Rows[i]["id_cliente"].ToString();
-            sCodigoCliente = ds.Tables["arquivos"].Rows[i]["codigoCliente"].ToString();
-            sNomeArquivo = ds.Tables["arquivos"].Rows[i]["nomeArquivo"].ToString();
-            sDescricao = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["descricao"].ToString());
-            sDataCadastro = ds.Tables["arquivos"].Rows[i]["dataCadastro"].ToString();
-            sDtDocumento = ds.Tables["arquivos"].Rows[i]["dtDocumento"].ToString();
-            sTipoDocumento = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["tipoDocumento"].ToString());
-            sUrlArquivo = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["urlArquivo"].ToString());
-            sImagemType = ds.Tables["arquivos"].Rows[i]["imagemType"].ToString();
-            sImagemSize = ds.Tables["arquivos"].Rows[i]["imagemSize"].ToString();
-
-            //// Retira a extensão do nome do arquivo
-            int iPosicaoExtensao = 0;
-            int iTam = sNomeArquivo.ToString().Length;
-            for (int t = 0; t < iTam; t++)
-            {
-               string sCaractere = sNomeArquivo.Substring(t, 1);
-               if (sCaractere.Equals("."))
-               {
-                  iPosicaoExtensao = t;
-               }
-            }
-
-            sExtensao = sNomeArquivo.Substring(iPosicaoExtensao);
-
-            if (sExtensao.Equals(""))
-            {
-               //// Retira a extensão do nome do arquivo
-               iPosicaoExtensao = 0;
-               iTam = sUrlArquivo.ToString().Length;
-               for (int t = 0; t < iTam; t++)
-               {
-                  string sCaractere = sUrlArquivo.Substring(t, 1);
-                  if (sCaractere.Equals("."))
-                  {
-                     iPosicaoExtensao = t;
-                  }
-               }
-
-               sExtensao = sUrlArquivo.Substring(iPosicaoExtensao);
-            }
-
-            ///////////////////////
-
-            sXml += "<registro>";
-
-            sXml += "<id_documentos>" + sId_documentosTaco + "</id_documentos>";
-            sXml += "<id_tipoDocumentos>" + sId_tipoDocumento + "</id_tipoDocumentos>";
-            sXml += "<id_cliente>" + sIdClienteTaco + "</id_cliente>";
-            sXml += "<codigoCliente>" + sCodigoCliente + "</codigoCliente>";
-            sXml += "<nomeArquivo>" + sNomeArquivo + "</nomeArquivo>";
-            sXml += "<descricao>" + sDescricao + "</descricao>";
-            sXml += "<dataCadastro>" + sDataCadastro + "</dataCadastro>";
-            sXml += "<dtDocumento>" + sDtDocumento + "</dtDocumento>";
-            sXml += "<tipoDocumento>" + sTipoDocumento + "</tipoDocumento>";
-            sXml += "<urlArquivo>" + sUrlArquivo + "</urlArquivo>";
-            sXml += "<imagemType>" + sImagemType + "</imagemType>";
-            sXml += "<imagemSize>" + sImagemSize + "</imagemSize>";
-            sXml += "<extensao>" + sExtensao + "</extensao>";
-
-            sXml += "</registro>";
-
-         }
-         sXml += "</cliente>";
-         sXml += "</arquivo>";
-
-
-         return sXml;
-      }
-
-      private void registraLocacaoConversao(DataSet ds)
-      {
-
-         int iArquivos = ds.Tables["arquivos"].Rows.Count;
-         string sXml = "";
-
-         sXml = "<arquivo>";
-         sXml += "<cliente>";
-
-         for (int i = 0; i < iArquivos; i++)
-         {
-            string sId_documentosTaco = ds.Tables["arquivos"].Rows[i]["id_conversaoTaco"].ToString(); ;
-            string sId_arquivoAzure = ds.Tables["arquivos"].Rows[i]["id_arquivo"].ToString(); ;
-
-            sXml += "<registro>";
-            sXml += "<id_documentos>" + sId_documentosTaco + "</id_documentos>"; // TACO
-            sXml += "<id_arquivo>" + sId_arquivoAzure + "</id_arquivo>"; // AZURE
-            sXml += "</registro>";
-         }
-
-         sXml += "</cliente>";
-         sXml += "</arquivo>";
-
-         try
-         {
-            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
-
-            if (funDB1.conectarTacoWO() == "OK")
-            {
-               try
-               {
-
-                  string sCmd = "";
-                  //sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
-                  sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
-                   "@strXml='" + sXml + "', " +
-                   "@modo=41";
-
-                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTacoWO);
-                  da.SelectCommand.CommandTimeout = 0;
-                  da.Fill(dsArquivosAzure, "arquivoOK");
-                  funDB1.fecharTacoWO();
-
-               }
-               catch (SqlException ex)
-               {
-                  listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-               }
-               finally
-               {
-                  funDB1.fecharTacoWO();
-               }
-            }
-         }
-         catch (SqlException ex)
-         {
-            listBox1.Items.Add("    - Erro ao regitsrar TACO - id_documentos");
-         }
-      }
-
-      #endregion
-      //------------------------------------------------------------------------------------------------------------------//
-
-
-      // Localiza clientes cadastrados no SCC ONLINE
-      private void procuraClientesAzure()
-      {
-         dsClientesAzure.Clear();
-
-         if (funDB1.conectarAzure() == "OK")
-         {
-            try
-            {
-               listBox1.Items.Add("**************** Iniciando processo ****************");
-               listBox1.Items.Add("(AZURE) - Consultando clientes cadastrados...");
-
-               string sCmd = "";
-               sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
-                      "FROM WO_cliente cli " +
-                      "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
-                      "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 ORDER BY cli.codigo ";
-
-               //sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
-               //       "FROM WO_cliente cli " +
-               //       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
-               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000025' ORDER BY cli.codigo ";
-
-               SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
-               da.SelectCommand.CommandTimeout = 0;
-               da.Fill(dsClientesAzure, "clientes");
-               funDB1.fecharAzure();
-            }
-            catch (SqlException ex)
-            {
-               listBox1.Items.Add("Erro no procuraClientesAzure()");
-            }
-            finally
-            {
-               funDB1.fecharAzure();
-            }
-         }
-
-         if (dsClientesAzure.Tables["clientes"].Rows.Count > 0)
-         {
-            listBox1.Items.Add("Foram localizado(s) " + dsClientesAzure.Tables["clientes"].Rows.Count.ToString() + " clientes.");
-            listBox1.Items.Add("");
-
-            // Conversão de arquivos Omeupredio TACO para AZURE
-            if (rbOmeupredioTaco.Checked)
-            {
-               procuraArquivosTACO(dsClientesAzure);
-
-               listBox1.Items.Add("**************** Procedimento realizado! ****************");
-               listBox1.SelectedIndex = listBox1.Items.Count - 1;
-               MessageBox.Show("Procedimento realizado!", "Conversão");
-            }
-            else
-            {
-               //// Conversão de arquivos locais \PRG\SCC\ANEXOS\ para AZURE
-               procuraArquivosLOCAL(dsClientesAzure);
-
-               listBox1.Items.Add("**************** Procedimento realizado! ****************");
-               listBox1.SelectedIndex = listBox1.Items.Count - 1;
-               MessageBox.Show("Procedimento realizado!", "Conversão");
-            }
-         }
-         else
-         {
-            MessageBox.Show("Não existe clientes no SCC online / Unidadez para conversão (Azure).", "Conversão");
          }
       }
 
@@ -965,7 +642,6 @@ namespace conversaoClient
             }
             #endregion
 
-
             #region CONVERSÃO ENCOMENDAS  (TACO/AZURE)
             try
             {
@@ -1034,6 +710,62 @@ namespace conversaoClient
             }
             #endregion
 
+            #region  CONVERSÃO LOGIN DOS COLABORADORES DO CONDOMÍNIO
+            try
+            {
+               listBox1.Items.Add("" + sCliente);
+
+               dsColaboradoresTACO.Clear();
+               if (funDB1.conectarTaco() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     sCmd = "EXEC [OMPSP_usuario] @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
+                        "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
+                        "@modo=20";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsColaboradoresTACO, "colaboradores");
+                     funDB1.fecharTaco();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro no procuraColaboradoresTACO()");
+                  }
+                  finally
+                  {
+                     funDB1.fecharTaco();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro no procuraColaboradoresTACO()");
+            }
+            finally
+            {
+               funDB1.fecharTaco();
+            }
+
+            if (dsColaboradoresTACO.Tables.Count > 0)
+            {
+               if (dsColaboradoresTACO.Tables["colaboradores"].Rows.Count > 0)
+               {
+                  // Insere lista colaboradores TACO em AZURE
+                  // Retorna lista do OM_usuario sem id_apto is null e apto='0' inseridas.
+                  DataSet dsRetornoAzure = insereColaboradoresAZURE(dsColaboradoresTACO);
+               }
+               else
+               {
+                  listBox1.Items.Add("    - Não existem registros de colaboradores para esse cliente.");
+               }
+            }
+
+
+            #endregion
+
             listBox1.Items.Add("");
 
             // Faz a lista correr.
@@ -1041,7 +773,113 @@ namespace conversaoClient
          }
       }
 
-      // ----------------------------- Encomendas ---------------------------------
+      #region // ------------------ Funções - Login dos Colaboradores do Condomínio------------------
+      private DataSet insereColaboradoresAZURE(DataSet dsColaboradoresTACO)
+      {
+         dsColaboradoresAzure.Clear();
+
+         listBox1.Items.Add("    - Foram encontrado(s) " + dsColaboradoresTACO.Tables["colaboradores"].Rows.Count + " colaboradores.");
+         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+         int iColaboradores = dsColaboradoresTACO.Tables["colaboradores"].Rows.Count;
+         sTotalColaboradores = iColaboradores.ToString();
+         string sXml = "";
+
+         if (iColaboradores > 0)
+         {
+            // Monta o XML com a Lista de id_usuario (TACO - Colaboradores) a ser enviada.
+            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+            sXml = montaXMLColaboradoresTACO(dsColaboradoresTACO);
+
+            // Envia ID_usuarioTACO (TACO) para SCC_colaborador (AZURE) .
+            try
+            {
+               listBox1.Items.Add("    - Enviando lista de colaboradores TACO/AZURE (insereColaboradoresAZURE)");
+
+               if (funDB1.conectarAzure() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     // Voltar Aqui....
+                     sCmd = "EXEC SCCSP_colaborador @id_empresa=" + this.id_empresa + ", " +
+                            "@id_cliente=" + this.id_cliente + ", " +
+                            "@strXml='" + sXml + "', " +
+                            "@modo=30";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsColaboradoresAzure, "colaboradores");
+                     funDB1.fecharAzure();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro 1 enviando lista de colaboradores TACO/AZURE (insereColaboradoresAZURE)");
+                  }
+                  finally
+                  {
+                     funDB1.fecharAzure();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro 2 enviando lista de colaboradores TACO/AZURE (insereColaboradoresAZURE)");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+         }
+
+         return dsColaboradoresAzure;
+      }
+
+      private string montaXMLColaboradoresTACO(DataSet ds)
+      {
+         int iColaboradores = ds.Tables["colaboradores"].Rows.Count;
+
+         string sXml = "";
+
+         sXml = "<colaboradores>";
+         sXml += "<cliente>";
+         sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
+         sXml += "<id_cliente>" + this.id_cliente + "</id_cliente>";
+
+         for (int i = 0; i < iColaboradores; i++)
+         {
+            string sId_usuarioTaco = "", sNome = "", sEmail = "", sFuncao="", sLogin = "", sSenha = "", sId_perfil = "",
+                   sPerfil = "";
+
+            sId_usuarioTaco = ds.Tables["colaboradores"].Rows[i]["id_usuario"].ToString();
+            sNome = funcoes1.LimpaLinha(ds.Tables["colaboradores"].Rows[i]["nomeColaborador"].ToString());
+            sEmail = funcoes1.LimpaLinha(ds.Tables["colaboradores"].Rows[i]["email"].ToString());
+            sFuncao = funcoes1.LimpaLinha(ds.Tables["colaboradores"].Rows[i]["funcao"].ToString());
+            sLogin = funcoes1.LimpaLinha(ds.Tables["colaboradores"].Rows[i]["login"].ToString());
+            sSenha = funcoes1.LimpaLinha(ds.Tables["colaboradores"].Rows[i]["senha3"].ToString());
+            sId_perfil = ds.Tables["colaboradores"].Rows[i]["id_perfil"].ToString();
+            sPerfil = funcoes1.LimpaLinha(ds.Tables["colaboradores"].Rows[i]["perfil"].ToString());
+
+            sXml += "<registro>";
+            sXml += "<id_usuarioTaco>" + sId_usuarioTaco + "</id_usuarioTaco>";
+            sXml += "<nome>" + sNome + "</nome>";
+            sXml += "<email>" + sEmail + "</email>";
+            sXml += "<funcao>" + sFuncao + "</funcao>";
+            sXml += "<login>" + sLogin + "</login>";
+            sXml += "<senha>" + sSenha + "</senha>";
+            sXml += "<id_perfil>" + sId_perfil + "</id_perfil>";
+            sXml += "<perfil>" + sPerfil + "</perfil>";
+            sXml += "</registro>";
+         }
+         sXml += "</cliente>";
+         sXml += "</colaboradores>";
+
+         return sXml;
+      }
+      #endregion
+
+
+      #region // ----------------------------- Funções - Encomendas ---------------------------------
       private DataSet insereEncomendasAZURE(DataSet dsEncomendasTACO)
       {
          dsEncomendasAzure.Clear();
@@ -1280,70 +1118,110 @@ namespace conversaoClient
          }
       }
 
-      private DataSet insereArquivosEncomendasAZURE(DataSet dsArquivosTACO)
+      //private DataSet insereArquivosEncomendasAZURE(DataSet dsArquivosTACO)
+      //{
+      //   dsArquivosAzure.Clear();
+
+      //   listBox1.Items.Add("    - Foram encontrado(s) " + dsArquivosTACO.Tables["arquivos"].Rows.Count + " arquivos.");
+      //   listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+      //   int iArquivos = dsArquivosTACO.Tables["arquivos"].Rows.Count;
+      //   sTotalArquivos = iArquivos.ToString();
+      //   string sXml = "";
+
+      //   if (iArquivos > 0)
+      //   {
+      //      // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
+      //      listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+      //      sXml = montaXMLArquivosTACO(dsArquivosTACO);
+
+      //      // Envia ID_arquivoTACO (TACO) para SCC_arquivo (AZURE) .
+      //      // Retorna ID_arquivo oficial (AZURE)
+      //      try
+      //      {
+      //         listBox1.Items.Add("    - Enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+
+      //         if (funDB1.conectarAzure() == "OK")
+      //         {
+      //            try
+      //            {
+      //               string sCmd = "";
+      //               sCmd = "EXEC SCCSP_arquivo @id_empresa=" + this.id_empresa + ", " +
+      //                      "@id_cliente=" + this.id_cliente + ", " +
+      //                      "@strXml='" + sXml + "', " +
+      //                      "@modo=20";
+
+      //               SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+      //               da.SelectCommand.CommandTimeout = 0;
+      //               da.Fill(dsArquivosAzure, "arquivos");
+      //               funDB1.fecharAzure();
+      //            }
+      //            catch (SqlException ex)
+      //            {
+      //               listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+      //            }
+      //            finally
+      //            {
+      //               funDB1.fecharAzure();
+      //            }
+      //         }
+      //      }
+      //      catch (SqlException ex)
+      //      {
+      //         listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+      //      }
+      //      finally
+      //      {
+      //         funDB1.fecharAzure();
+      //      }
+
+      //   }
+
+      //   return dsArquivosAzure;
+      //}
+
+      private void registraConversaoEncomenda(string sId_encomenda)
       {
-         dsArquivosAzure.Clear();
-
-         listBox1.Items.Add("    - Foram encontrado(s) " + dsArquivosTACO.Tables["arquivos"].Rows.Count + " arquivos.");
-         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
-
-         int iArquivos = dsArquivosTACO.Tables["arquivos"].Rows.Count;
-         sTotalArquivos = iArquivos.ToString();
-         string sXml = "";
-
-         if (iArquivos > 0)
+         try
          {
-            // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
-            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
-            sXml = montaXMLArquivosTACO(dsArquivosTACO);
+            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
 
-            // Envia ID_arquivoTACO (TACO) para SCC_arquivo (AZURE) .
-            // Retorna ID_arquivo oficial (AZURE)
-            try
+            if (funDB1.conectarAzure() == "OK")
             {
-               listBox1.Items.Add("    - Enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-
-               if (funDB1.conectarAzure() == "OK")
+               try
                {
-                  try
-                  {
-                     string sCmd = "";
-                     sCmd = "EXEC SCCSP_arquivo @id_empresa=" + this.id_empresa + ", " +
-                            "@id_cliente=" + this.id_cliente + ", " +
-                            "@strXml='" + sXml + "', " +
-                            "@modo=20";
 
-                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
-                     da.SelectCommand.CommandTimeout = 0;
-                     da.Fill(dsArquivosAzure, "arquivos");
-                     funDB1.fecharAzure();
-                  }
-                  catch (SqlException ex)
-                  {
-                     listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-                  }
-                  finally
-                  {
-                     funDB1.fecharAzure();
-                  }
+                  string sCmd = "";
+                  sCmd = "EXEC OMPSP_encomenda @id_empresa = " + this.id_empresa + ", " +
+                         " @id_encomenda=" + sId_encomenda + ", " +
+                         "@modo=31";
+
+                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                  da.SelectCommand.CommandTimeout = 0;
+                  da.Fill(dsArquivosAzure, "encomendaOK");
+                  funDB1.fecharAzure();
+
+               }
+               catch (SqlException ex)
+               {
+                  listBox1.Items.Add("    - Erro enviando lista de encomendas TACO/AZURE (insereEncomendasAZURE)");
+               }
+               finally
+               {
+                  funDB1.fecharAzure();
                }
             }
-            catch (SqlException ex)
-            {
-               listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-            }
-            finally
-            {
-               funDB1.fecharAzure();
-            }
-
+         }
+         catch (SqlException ex)
+         {
+            listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_encomenda: " + sId_encomenda);
          }
 
-         return dsArquivosAzure;
       }
+      #endregion
 
-      // ---------------------------------------------------------------------------
 
+      #region  // ----------------------------- Funções - Livro de Ocorrências ---------------------------------
 
       private DataSet insereOcorrenciasAZURE(DataSet dsOcorrenciasTACO)
       {
@@ -1527,11 +1405,9 @@ namespace conversaoClient
                      if (sUrlArquivo.Equals("") || sUrlArquivo.Equals("0"))
                      {
                         listBox1.Items.Add("       - (TACO) Arquivo Não possui anexo.");
-
                      }
                      else
                      {
-
 
                         listBox1.Items.Add("       - (TACO) Buscando arquivo byte.");
 
@@ -1561,24 +1437,6 @@ namespace conversaoClient
                         {
                            listBox1.Items.Add("       - (TACO) - Localizado arquivo ocorrência.");
 
-                           // Caso tenha urlArquivo já está no Firebase, não é necessário realizar a conversão (Download/Upload).
-                           // Alguns arquivos onvertidos já não estão mais em Bytes na Taco.
-                           //string sUrlArquivoTaco = dsArquivosTACO.Tables["ocorrencias"].Rows[0]["urlArquivo"].ToString();
-
-                           //if (sUrlArquivoTaco != "")
-                           //{
-                           //   registraConversao(sId_arquivo, sUrlArquivoTaco);
-
-                           //   // Faz a rolagem da lista
-                           //   listBox1.SelectedIndex = listBox1.Items.Count - 1;
-
-                           //   // Pausa de 2 segundos, evitar TimeOut.
-                           //   System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2));
-
-                           //}
-                           //else
-                           //{
-
                            byte[] arquivoM = new byte[0];
                            DataRow linhaM = dsArquivosTACO.Tables[0].Rows[0];
                            arquivoM = (byte[])linhaM["imagem"];
@@ -1592,15 +1450,6 @@ namespace conversaoClient
                               // Faz a rolagem da lista
                               listBox1.SelectedIndex = listBox1.Items.Count - 1;
 
-                              //if (!funDrive1.uploadToDrive(this.id_empresa, "GED", "OM_ocorrenciaArquivo", sId_ocorrenciaAzure, arquivoM, sNomeArquivoEditado))
-                              //{
-                              //   listBox1.Items.Add("          - Já realizado envio anteriormente");
-                              //}
-                              //else
-                              //{
-                              //   listBox1.Items.Add("          - Enviado!");
-                              //}
-
                               string sArquivoCompleto = sUrlArquivo;
                               //string sMimeType = funDrive1.retornaMimeType(sExtensao);
                               string sMimeType = "image/jpeg";
@@ -1613,8 +1462,6 @@ namespace conversaoClient
                               {
                                  listBox1.Items.Add("          - Enviado!");
                               }
-
-                              //registraConversaoOcorrencia(sId_ocorrenciaAzure);
 
                               // Faz a rolagem da lista
                               listBox1.SelectedIndex = listBox1.Items.Count - 1;
@@ -1718,6 +1565,48 @@ namespace conversaoClient
          return dsArquivosAzure;
       }
 
+      private void registraConversaoOcorrencia(string sId_ocorrencia)
+      {
+         try
+         {
+            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
+
+            if (funDB1.conectarAzure() == "OK")
+            {
+               try
+               {
+
+                  string sCmd = "";
+                  sCmd = "EXEC OMPSP_ocorrencia @id_empresa = " + this.id_empresa + ", " +
+                         " @id_ocorrencia=" + sId_ocorrencia + ", " +
+                         "@modo=31";
+
+                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                  da.SelectCommand.CommandTimeout = 0;
+                  da.Fill(dsArquivosAzure, "ocorrenciaOK");
+                  funDB1.fecharAzure();
+
+               }
+               catch (SqlException ex)
+               {
+                  listBox1.Items.Add("    - Erro enviando lista de ocorrencias TACO/AZURE (insereOcorrenciasAZURE)");
+               }
+               finally
+               {
+                  funDB1.fecharAzure();
+               }
+            }
+         }
+         catch (SqlException ex)
+         {
+            listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_ocorrencia: " + sId_ocorrencia);
+         }
+
+      }
+      #endregion
+
+
+      #region// ----------------------------- Funções - Download Arquivos Taco para local ---------------------------------
       private void buscaIdsArquivosTaco()
       {
          string erro = "0", msg = "", url = "";
@@ -1800,6 +1689,7 @@ namespace conversaoClient
          }
 
       }
+      #endregion
 
       private void procuraArquivoBinarioTaco(DataSet dsRetornoArquivosAzure)
       {
@@ -2407,6 +2297,319 @@ namespace conversaoClient
       }
       #endregion
       //------------------------------------------------------------------------------------------------------------------//
+      #region CONVERSÃO LOCACAO - ARQUIVOS BD TACO/BD AZURE
+
+      private void procuraArquivosLocacaoTACO(DataSet dsCliente)
+      {
+         int iClientes = dsCliente.Tables["clientes"].Rows.Count;
+         sTotal = iClientes.ToString();
+
+         listBox1.Items.Add("(TACO) - Consultando registros de locação...");
+
+         // Procura registros por Cliente
+         for (int i = 0; i < iClientes; i++)
+         {
+            if (bIsCancel) { return; }
+
+            // ID_empresa e ID_cliente (Azure)
+            this.id_empresa = dsCliente.Tables["clientes"].Rows[i]["id_empresa"].ToString();
+            this.sCodigoCliente = dsCliente.Tables["clientes"].Rows[i]["codigo"].ToString().PadLeft(8, Convert.ToChar("0"));
+            this.sTipo = dsCliente.Tables["clientes"].Rows[i]["tipo"].ToString();
+            this.sId_azure = dsCliente.Tables["clientes"].Rows[i]["id"].ToString();
+            this.sId_conversaoWO = dsCliente.Tables["clientes"].Rows[i]["id_conversaoWO"].ToString();
+
+            String sCliente = "Cliente: " + dsCliente.Tables["clientes"].Rows[i]["codigo"].ToString() + "-" + dsCliente.Tables["clientes"].Rows[i]["nome"].ToString();
+
+            #region CONVERSÃO DOCUMENTOS DE LOCAÇÃO (TACO/AZURE)
+            try
+            {
+               listBox1.Items.Add("" + sCliente);
+
+               dsArquivosTACO.Clear();
+               if (funDB1.conectarTacoWO() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     //sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                     sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
+                            "@tipo='" + this.sTipo.ToString() + "', " +
+                            "@id=" + this.sId_conversaoWO.ToString() + ", " +
+                            "@data='" + this.dtInicio.Text + "', " +
+                            "@modo=40";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTacoWO);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsArquivosTACO, "arquivos");
+                     funDB1.fecharTacoWO();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro no procuraArquivosLocacaoTACO()");
+                  }
+                  finally
+                  {
+                     funDB1.fecharTacoWO();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro no procuraArquivosLocacaoTACO()");
+            }
+            finally
+            {
+               funDB1.fecharTacoWO();
+            }
+
+            if (dsArquivosTACO.Tables["arquivos"].Rows.Count > 0)
+            {
+               // Insere lista arquivos TACO em AZURE
+               // Retorna lista do SCL_arquivo inseridas (id_arquivo e id_conversaoTaco).
+               //DataSet dsRetornoAzure = insereArquivosLocacaoAZURE(dsArquivosTACO);
+
+               DataSet dsRetornoAzure = new DataSet();
+               dsRetornoAzure.Clear();
+               dsRetornoAzure = insereArquivosLocacaoAZURE(dsArquivosTACO);
+
+               if (dsRetornoAzure.Tables["arquivos"].Rows.Count <= 0)
+               {
+                  listBox1.Items.Add("    - Não existem registros a serem enviados.");
+               }
+               else
+               {
+                  registraLocacaoConversao(dsRetornoAzure);
+               }
+            }
+            else
+            {
+               listBox1.Items.Add("    - Não existem registros para esse cliente.");
+            }
+            #endregion
+
+            listBox1.Items.Add("");
+
+            // Faz a lista correr.
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+         }
+      }
+
+      private DataSet insereArquivosLocacaoAZURE(DataSet dsArquivosTACO)
+      {
+         dsArquivosAzure.Clear();
+
+         listBox1.Items.Add("    - Foram encontrado(s) " + dsArquivosTACO.Tables["arquivos"].Rows.Count + " arquivos.");
+         listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+         int iArquivos = dsArquivosTACO.Tables["arquivos"].Rows.Count;
+         sTotalArquivos = iArquivos.ToString();
+         string sXml = "";
+
+         if (iArquivos > 0)
+         {
+            // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
+            listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+            sXml = montaXMLArquivosLocacaoTACO(dsArquivosTACO);
+
+            // Envia ID_arquivoTACO (TACO) para SCC_arquivo (AZURE) .
+            // Retorna ID_arquivo oficial (AZURE)
+            try
+            {
+               listBox1.Items.Add("    - Enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+
+               if (funDB1.conectarAzure() == "OK")
+               {
+                  try
+                  {
+                     string sCmd = "";
+                     sCmd = "EXEC SCLSP_arquivo @id_empresa=" + this.id_empresa + ", " +
+                            //"@id_cliente=" + this.id_cliente + ", " +
+                            "@tipo='" + this.sTipo.ToString() + "', " +
+                            "@id=" + this.sId_azure.ToString() + ", " +
+                            "@strXml='" + sXml + "', " +
+                            "@modo=41";
+
+                     SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                     da.SelectCommand.CommandTimeout = 0;
+                     da.Fill(dsArquivosAzure, "arquivos");
+                     funDB1.fecharAzure();
+                  }
+                  catch (SqlException ex)
+                  {
+                     listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+                  }
+                  finally
+                  {
+                     funDB1.fecharAzure();
+                  }
+               }
+            }
+            catch (SqlException ex)
+            {
+               listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+            }
+            finally
+            {
+               funDB1.fecharAzure();
+            }
+
+         }
+         return dsArquivosAzure;
+      }
+
+      private string montaXMLArquivosLocacaoTACO(DataSet ds)
+      {
+         int iArquivos = ds.Tables["arquivos"].Rows.Count;
+
+         string sXml = "";
+
+         sXml = "<arquivo>";
+         sXml += "<cliente>";
+         sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
+         sXml += "<tipo>" + this.sTipo + "</tipo>";
+         sXml += "<id>" + this.sId_azure + "</id>";
+
+         for (int i = 0; i < iArquivos; i++)
+         {
+            string sId_documentosTaco = "", sId_tipoDocumento = "", sIdClienteTaco = "", sCodigoCliente = "",
+                   sNomeArquivo = "", sDescricao = "", sDataCadastro = "", sDtDocumento = "",
+                   sTipoDocumento = "", sUrlArquivo = "", sImagemType = "", sImagemSize = "", sExtensao = "";
+
+
+            sId_documentosTaco = ds.Tables["arquivos"].Rows[i]["id_documentos"].ToString();
+            sId_tipoDocumento = ds.Tables["arquivos"].Rows[i]["id_tipoDocumento"].ToString();
+            sIdClienteTaco = ds.Tables["arquivos"].Rows[i]["id_cliente"].ToString();
+            sCodigoCliente = ds.Tables["arquivos"].Rows[i]["codigoCliente"].ToString();
+            sNomeArquivo = ds.Tables["arquivos"].Rows[i]["nomeArquivo"].ToString();
+            sDescricao = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["descricao"].ToString());
+            sDataCadastro = ds.Tables["arquivos"].Rows[i]["dataCadastro"].ToString();
+            sDtDocumento = ds.Tables["arquivos"].Rows[i]["dtDocumento"].ToString();
+            sTipoDocumento = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["tipoDocumento"].ToString());
+            sUrlArquivo = funcoes1.LimpaLinha(ds.Tables["arquivos"].Rows[i]["urlArquivo"].ToString());
+            sImagemType = ds.Tables["arquivos"].Rows[i]["imagemType"].ToString();
+            sImagemSize = ds.Tables["arquivos"].Rows[i]["imagemSize"].ToString();
+
+            //// Retira a extensão do nome do arquivo
+            int iPosicaoExtensao = 0;
+            int iTam = sNomeArquivo.ToString().Length;
+            for (int t = 0; t < iTam; t++)
+            {
+               string sCaractere = sNomeArquivo.Substring(t, 1);
+               if (sCaractere.Equals("."))
+               {
+                  iPosicaoExtensao = t;
+               }
+            }
+
+            sExtensao = sNomeArquivo.Substring(iPosicaoExtensao);
+
+            if (sExtensao.Equals(""))
+            {
+               //// Retira a extensão do nome do arquivo
+               iPosicaoExtensao = 0;
+               iTam = sUrlArquivo.ToString().Length;
+               for (int t = 0; t < iTam; t++)
+               {
+                  string sCaractere = sUrlArquivo.Substring(t, 1);
+                  if (sCaractere.Equals("."))
+                  {
+                     iPosicaoExtensao = t;
+                  }
+               }
+
+               sExtensao = sUrlArquivo.Substring(iPosicaoExtensao);
+            }
+
+            ///////////////////////
+
+            sXml += "<registro>";
+
+            sXml += "<id_documentos>" + sId_documentosTaco + "</id_documentos>";
+            sXml += "<id_tipoDocumentos>" + sId_tipoDocumento + "</id_tipoDocumentos>";
+            sXml += "<id_cliente>" + sIdClienteTaco + "</id_cliente>";
+            sXml += "<codigoCliente>" + sCodigoCliente + "</codigoCliente>";
+            sXml += "<nomeArquivo>" + sNomeArquivo + "</nomeArquivo>";
+            sXml += "<descricao>" + sDescricao + "</descricao>";
+            sXml += "<dataCadastro>" + sDataCadastro + "</dataCadastro>";
+            sXml += "<dtDocumento>" + sDtDocumento + "</dtDocumento>";
+            sXml += "<tipoDocumento>" + sTipoDocumento + "</tipoDocumento>";
+            sXml += "<urlArquivo>" + sUrlArquivo + "</urlArquivo>";
+            sXml += "<imagemType>" + sImagemType + "</imagemType>";
+            sXml += "<imagemSize>" + sImagemSize + "</imagemSize>";
+            sXml += "<extensao>" + sExtensao + "</extensao>";
+
+            sXml += "</registro>";
+
+         }
+         sXml += "</cliente>";
+         sXml += "</arquivo>";
+
+
+         return sXml;
+      }
+
+      private void registraLocacaoConversao(DataSet ds)
+      {
+
+         int iArquivos = ds.Tables["arquivos"].Rows.Count;
+         string sXml = "";
+
+         sXml = "<arquivo>";
+         sXml += "<cliente>";
+
+         for (int i = 0; i < iArquivos; i++)
+         {
+            string sId_documentosTaco = ds.Tables["arquivos"].Rows[i]["id_conversaoTaco"].ToString(); ;
+            string sId_arquivoAzure = ds.Tables["arquivos"].Rows[i]["id_arquivo"].ToString(); ;
+
+            sXml += "<registro>";
+            sXml += "<id_documentos>" + sId_documentosTaco + "</id_documentos>"; // TACO
+            sXml += "<id_arquivo>" + sId_arquivoAzure + "</id_arquivo>"; // AZURE
+            sXml += "</registro>";
+         }
+
+         sXml += "</cliente>";
+         sXml += "</arquivo>";
+
+         try
+         {
+            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
+
+            if (funDB1.conectarTacoWO() == "OK")
+            {
+               try
+               {
+
+                  string sCmd = "";
+                  //sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : this.sCodigoAdm) + "', " +
+                  sCmd = "EXEC SCLSP_documento @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
+                   "@strXml='" + sXml + "', " +
+                   "@modo=41";
+
+                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTacoWO);
+                  da.SelectCommand.CommandTimeout = 0;
+                  da.Fill(dsArquivosAzure, "arquivoOK");
+                  funDB1.fecharTacoWO();
+
+               }
+               catch (SqlException ex)
+               {
+                  listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
+               }
+               finally
+               {
+                  funDB1.fecharTacoWO();
+               }
+            }
+         }
+         catch (SqlException ex)
+         {
+            listBox1.Items.Add("    - Erro ao regitsrar TACO - id_documentos");
+         }
+      }
+
+      #endregion
+      //------------------------------------------------------------------------------------------------------------------//
 
       private string Aviso(string descricao, int espaco)
       {
@@ -2456,82 +2659,8 @@ namespace conversaoClient
          }
 
       }
-      private void registraConversaoOcorrencia(string sId_ocorrencia)
-      {
-         try
-         {
-            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
 
-            if (funDB1.conectarAzure() == "OK")
-            {
-               try
-               {
 
-                  string sCmd = "";
-                  sCmd = "EXEC OMPSP_ocorrencia @id_empresa = " + this.id_empresa + ", " +
-                         " @id_ocorrencia=" + sId_ocorrencia + ", " +
-                         "@modo=31";
-
-                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
-                  da.SelectCommand.CommandTimeout = 0;
-                  da.Fill(dsArquivosAzure, "ocorrenciaOK");
-                  funDB1.fecharAzure();
-
-               }
-               catch (SqlException ex)
-               {
-                  listBox1.Items.Add("    - Erro enviando lista de ocorrencias TACO/AZURE (insereOcorrenciasAZURE)");
-               }
-               finally
-               {
-                  funDB1.fecharAzure();
-               }
-            }
-         }
-         catch (SqlException ex)
-         {
-            listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_ocorrencia: " + sId_ocorrencia);
-         }
-
-      }
-      private void registraConversaoEncomenda(string sId_encomenda)
-      {
-         try
-         {
-            listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
-
-            if (funDB1.conectarAzure() == "OK")
-            {
-               try
-               {
-
-                  string sCmd = "";
-                  sCmd = "EXEC OMPSP_encomenda @id_empresa = " + this.id_empresa + ", " +
-                         " @id_encomenda=" + sId_encomenda + ", " +
-                         "@modo=31";
-
-                  SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
-                  da.SelectCommand.CommandTimeout = 0;
-                  da.Fill(dsArquivosAzure, "encomendaOK");
-                  funDB1.fecharAzure();
-
-               }
-               catch (SqlException ex)
-               {
-                  listBox1.Items.Add("    - Erro enviando lista de encomendas TACO/AZURE (insereEncomendasAZURE)");
-               }
-               finally
-               {
-                  funDB1.fecharAzure();
-               }
-            }
-         }
-         catch (SqlException ex)
-         {
-            listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_encomenda: " + sId_encomenda);
-         }
-
-      }
 
    }
 
