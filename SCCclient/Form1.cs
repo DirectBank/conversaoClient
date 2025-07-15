@@ -42,7 +42,7 @@ namespace conversaoClient
       private DateTime dDataInclusao, dDataParaEnviar, dDataHoje;
 
       //private string sVersao = "21.07.16.16:30"; //ano.mes.dia.hora
-      private string sVersao = "24.05.02.16:00"; //ano.mes.dia.hora
+      private string sVersao = "25.07.15.11:00"; //ano.mes.dia.hora
 
       private BackgroundWorker bgw;
       private bool bIsCancel = false;
