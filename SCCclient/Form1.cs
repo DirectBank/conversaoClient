@@ -393,10 +393,10 @@ namespace conversaoClient
                       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
                       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 ORDER BY cli.codigo ";
 
-               //sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
-               //       "FROM WO_cliente cli " +
-               //       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
-               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00000022' ORDER BY cli.codigo ";
+               sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
+                      "FROM WO_cliente cli " +
+                      "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
+                      "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00001000' ORDER BY cli.codigo ";
 
                SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
                da.SelectCommand.CommandTimeout = 0;
@@ -778,7 +778,7 @@ namespace conversaoClient
                 dsManutencaoPredialTACO.Clear();
                 if (funDB1.conectarTaco() == "OK")
                 {
-                    try
+                    try 
                     {
                         string sCmd = "";
                         sCmd = "EXEC OMPSP_manutencaoPredial @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
@@ -1295,7 +1295,7 @@ namespace conversaoClient
 
         private string montaXMLManutencaoPredialTACO(DataSet ds)
         {
-            int iEncomendas = ds.Tables["encomendas"].Rows.Count;
+            int iManutencoes = ds.Tables["manutencao"].Rows.Count;
 
             string sXml = "";
 
@@ -1304,28 +1304,28 @@ namespace conversaoClient
             sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
             sXml += "<id_cliente>" + this.id_cliente + "</id_cliente>";
 
-            for (int i = 0; i < iEncomendas; i++)
+            for (int i = 0; i < iManutencoes; i++)
             {
                 string sId_manutencaoTaco = "", sId_usuario = "", sTipo = "", sBloco = "", sApto = "", sNome = "",
                        sLocal = "", sObservacao = "", sDataCadastro = "", sTemFoto = "",
                        sId_tipoEncomenda = "", sNomeTipoEncomenda = "", sEspacoEncomenda = "",
-                       sTitulo="", sDetalhe="", sId_usuarioResposta="", sBlocoResposta="", sAptoResposta="", sDataResposta="", sResposta = "";
+                       sTitulo="", sDescricao = "", sId_usuarioResposta="", sBlocoResposta="", sAptoResposta="", sDataResposta="", sResposta = "";
 
                 sId_manutencaoTaco = ds.Tables["manutencao"].Rows[i]["id_manutencao"].ToString();
-                sId_usuario = ds.Tables["encomendas"].Rows[i]["id_usuario"].ToString();
-                sTipo = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["tipo"].ToString());
-                sBloco = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["bloco"].ToString());
-                sApto = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["apto"].ToString());
+                sId_usuario = ds.Tables["manutencao"].Rows[i]["id_usuario"].ToString();
+                sTipo = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["tipo"].ToString());
+                sBloco = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["bloco"].ToString());
+                sApto = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["apto"].ToString());
                 
-                sTitulo= funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["nome"].ToString());
-                sDetalhe = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["nome"].ToString());
+                sTitulo= funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["titulo"].ToString());
+                sDescricao = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["descricao"].ToString());
 
                 sId_usuarioResposta = ds.Tables["manutencao"].Rows[i]["id_usuarioResposta"].ToString();
-                sBlocoResposta = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["bloco"].ToString());
-                sAptoResposta = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["apto"].ToString());
+                sBlocoResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["bloco"].ToString());
+                sAptoResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["apto"].ToString());
 
-                sDataResposta = funcoes1.LimpaLinha(ds.Tables["manutenmcao"].Rows[i]["dataResposta"].ToString());
-                sResposta = funcoes1.LimpaLinha(ds.Tables["manutenmcao"].Rows[i]["resposta"].ToString());
+                sDataResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["dataResposta"].ToString());
+                sResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["resposta"].ToString());
 
 
                 sXml += "<registro>";
@@ -1336,7 +1336,7 @@ namespace conversaoClient
                 sXml += "<apto>" + sApto + "</apto>";
 
                 sXml += "<titulo>" + sTitulo + "</titulo>";
-                sXml += "<detalhe>" + sDetalhe + "</detalhe>";
+                sXml += "<descricao>" + sDescricao + "</descricao>";
 
                 sXml += "<id_usuarioResposta>" + sId_usuarioResposta + "</id_usuarioResposta>";
                 sXml += "<blocoResposta>" + sBlocoResposta + "</blocoResposta>";
