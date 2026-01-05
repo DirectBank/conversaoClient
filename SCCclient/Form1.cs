@@ -35,6 +35,10 @@ namespace conversaoClient
       DataSet dsColaboradoresTACO = new DataSet();
       DataSet dsColaboradoresAzure = new DataSet();
 
+        
+      DataSet dsManutencaoPredialTACO = new DataSet();
+      DataSet dsManutencaoPredialAzure = new DataSet();
+
 
       // DataSet para conversão de foto dos usuarios Workoffice
       DataSet dsUsuariosWorkoffice = new DataSet();
@@ -51,7 +55,7 @@ namespace conversaoClient
       private string id_empresa = "", id_cliente = "", id_usuario = "";
       private string sTotal, sTotalArquivos, sEnviados, sTotalDoc, sConvertidos,
                      sLblStatus_0, sLblStatus_1, sLblStatus_2, sLblStatus_3, sErroCatch, sDataInicio, sTipo = "", sId_azure = "", sId_conversaoWO = "";
-      private string sTotalOcorrencias = "", sTotalEncomendas = "", sTotalColaboradores = "";
+      private string sTotalOcorrencias = "", sTotalEncomendas = "", sTotalColaboradores = "", sTotalManutencoes="";
 
       private int _iBgwProgress;
 
@@ -764,9 +768,77 @@ namespace conversaoClient
             }
 
 
+                #endregion
+
+            #region CONVERSÃO MANUETNÇÃO PREDIAL  (TACO/AZURE)
+            try
+            {
+                listBox1.Items.Add("" + sCliente);
+
+                dsManutencaoPredialTACO.Clear();
+                if (funDB1.conectarTaco() == "OK")
+                {
+                    try
+                    {
+                        string sCmd = "";
+                        sCmd = "EXEC OMPSP_manutencaoPredial @codigoAdm='" + (this.sCodigoAdm.Equals("00001777") ? "00000004" : (this.sCodigoAdm.Equals("00001853") ? "00000856" : this.sCodigoAdm)) + "', " +
+                            "@codigoCliente='" + this.sCodigoCliente.Substring(4, 4) + "', " +
+                            "@dataInicio='" + this.dtInicio.Text + "', " +
+                            "@modo=10";
+
+                        SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
+                        da.SelectCommand.CommandTimeout = 0;
+                        da.Fill(dsManutencaoPredialTACO, "manutencao");
+                        funDB1.fecharTaco();
+                    }
+                    catch (SqlException ex)
+                    {
+                        listBox1.Items.Add("    - Erro no procuradsManutencaoPredialTACO()");
+                    }
+                    finally
+                    {
+                        funDB1.fecharTaco();
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                listBox1.Items.Add("    - Erro no procuradsManutencaoPredialTACO()");
+            }
+            finally
+            {
+                funDB1.fecharTaco();
+            }
+
+            if (dsManutencaoPredialTACO.Tables.Count > 0)
+            {
+                if (dsManutencaoPredialTACO.Tables["manutencao"].Rows.Count > 0)
+                {
+                    // Insere lista manutenção predial TACO em AZURE
+                    // Retorna lista do OM_manutencaoPredial inseridas.
+                    DataSet dsRetornoAzure = insereManutencaoPredialAZURE(dsManutencaoPredialTACO);
+                    if (dsRetornoAzure.Tables.Count > 0)
+                    {
+                        if (dsRetornoAzure.Tables["manutencao"].Rows.Count > 0)
+                        {
+                            // Percorre lista de encomendas AZURE e localiza encomendas arquivo bytes TACO
+                            // Envia para o Firebase
+                            procuraManutencaoPredialBinarioTaco(dsRetornoAzure);
+                        }
+                        else
+                        {
+                            listBox1.Items.Add("    - Não existem registros de encomendas a serem enviados.");
+                        }
+                    }
+                }
+                else
+                {
+                    listBox1.Items.Add("    - Não existem registros de encomendas para esse cliente.");
+                }
+            }
             #endregion
 
-            listBox1.Items.Add("");
+                listBox1.Items.Add("");
 
             // Faz a lista correr.
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
@@ -1118,68 +1190,6 @@ namespace conversaoClient
          }
       }
 
-      //private DataSet insereArquivosEncomendasAZURE(DataSet dsArquivosTACO)
-      //{
-      //   dsArquivosAzure.Clear();
-
-      //   listBox1.Items.Add("    - Foram encontrado(s) " + dsArquivosTACO.Tables["arquivos"].Rows.Count + " arquivos.");
-      //   listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
-
-      //   int iArquivos = dsArquivosTACO.Tables["arquivos"].Rows.Count;
-      //   sTotalArquivos = iArquivos.ToString();
-      //   string sXml = "";
-
-      //   if (iArquivos > 0)
-      //   {
-      //      // Monta o XML com a Lista de ID_arquivo (TACO) a ser enviada.
-      //      listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
-      //      sXml = montaXMLArquivosTACO(dsArquivosTACO);
-
-      //      // Envia ID_arquivoTACO (TACO) para SCC_arquivo (AZURE) .
-      //      // Retorna ID_arquivo oficial (AZURE)
-      //      try
-      //      {
-      //         listBox1.Items.Add("    - Enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-
-      //         if (funDB1.conectarAzure() == "OK")
-      //         {
-      //            try
-      //            {
-      //               string sCmd = "";
-      //               sCmd = "EXEC SCCSP_arquivo @id_empresa=" + this.id_empresa + ", " +
-      //                      "@id_cliente=" + this.id_cliente + ", " +
-      //                      "@strXml='" + sXml + "', " +
-      //                      "@modo=20";
-
-      //               SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
-      //               da.SelectCommand.CommandTimeout = 0;
-      //               da.Fill(dsArquivosAzure, "arquivos");
-      //               funDB1.fecharAzure();
-      //            }
-      //            catch (SqlException ex)
-      //            {
-      //               listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-      //            }
-      //            finally
-      //            {
-      //               funDB1.fecharAzure();
-      //            }
-      //         }
-      //      }
-      //      catch (SqlException ex)
-      //      {
-      //         listBox1.Items.Add("    - Erro enviando lista de arquivos TACO/AZURE (insereArquivosAZURE)");
-      //      }
-      //      finally
-      //      {
-      //         funDB1.fecharAzure();
-      //      }
-
-      //   }
-
-      //   return dsArquivosAzure;
-      //}
-
       private void registraConversaoEncomenda(string sId_encomenda)
       {
          try
@@ -1218,12 +1228,300 @@ namespace conversaoClient
          }
 
       }
-      #endregion
+        #endregion
+
+        #region // ----------------------------- Funções - Manutenção Predial ---------------------------------
+
+        private DataSet insereManutencaoPredialAZURE(DataSet dsManutencaoPredialTACO)
+        {
+            dsManutencaoPredialAzure.Clear();
+
+            listBox1.Items.Add("    - Foram encontrado(s) " + dsManutencaoPredialTACO.Tables["manutencao"].Rows.Count + " manutenções.");
+            listBox1.Items.Add("    - Inserindo lista e retornando referência (AZURE)...");
+
+            int iManutencoes = dsManutencaoPredialTACO.Tables["manutencao"].Rows.Count;
+            sTotalManutencoes = iManutencoes.ToString();
+            string sXml = "";
+
+            if (iManutencoes > 0)
+            {
+                // Monta o XML com a Lista de id_encomenda (TACO) a ser enviada.
+                listBox1.Items.Add("    - Montando XML lista TACO/AZURE...");
+                sXml = montaXMLManutencaoPredialTACO(dsManutencaoPredialTACO);
+
+                // Envia ID_manutencaoTACO (TACO) para OM_manutencaoPredial (AZURE) .
+                try
+                {
+                    listBox1.Items.Add("    - Enviando lista de manutenções TACO/AZURE (insereManutencaoPredialAZURE)");
+
+                    if (funDB1.conectarAzure() == "OK")
+                    {
+                        try
+                        {
+                            string sCmd = "";
+                            // Voltar Aqui....
+                            sCmd = "EXEC OMPSP_manutencaoPredial @id_empresa=" + this.id_empresa + ", " +
+                                   "@id_cliente=" + this.id_cliente + ", " +
+                                   "@strXml='" + sXml + "', " +
+                                   "@modo=30";
+
+                            SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                            da.SelectCommand.CommandTimeout = 0;
+                            da.Fill(dsManutencaoPredialAzure, "manutencao");
+                            funDB1.fecharAzure();
+                        }
+                        catch (SqlException ex)
+                        {
+                            listBox1.Items.Add("    - Erro 1 enviando lista de manutencao TACO/AZURE (insereManutencapPredialAZURE)");
+                        }
+                        finally
+                        {
+                            funDB1.fecharAzure();
+                        }
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    listBox1.Items.Add("    - Erro 2 enviando lista de manutencao TACO/AZURE (insereManutencapPredialAZURE)");
+                }
+                finally
+                {
+                    funDB1.fecharAzure();
+                }
+            }
+
+            return dsManutencaoPredialAzure;
+        }
+
+        private string montaXMLManutencaoPredialTACO(DataSet ds)
+        {
+            int iEncomendas = ds.Tables["encomendas"].Rows.Count;
+
+            string sXml = "";
+
+            sXml = "<manutencao>";
+            sXml += "<cliente>";
+            sXml += "<id_empresa>" + this.id_empresa + "</id_empresa>";
+            sXml += "<id_cliente>" + this.id_cliente + "</id_cliente>";
+
+            for (int i = 0; i < iEncomendas; i++)
+            {
+                string sId_manutencaoTaco = "", sId_usuario = "", sTipo = "", sBloco = "", sApto = "", sNome = "",
+                       sLocal = "", sObservacao = "", sDataCadastro = "", sTemFoto = "",
+                       sId_tipoEncomenda = "", sNomeTipoEncomenda = "", sEspacoEncomenda = "",
+                       sTitulo="", sDetalhe="", sId_usuarioResposta="", sBlocoResposta="", sAptoResposta="", sDataResposta="", sResposta = "";
+
+                sId_manutencaoTaco = ds.Tables["manutencao"].Rows[i]["id_manutencao"].ToString();
+                sId_usuario = ds.Tables["encomendas"].Rows[i]["id_usuario"].ToString();
+                sTipo = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["tipo"].ToString());
+                sBloco = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["bloco"].ToString());
+                sApto = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["apto"].ToString());
+                
+                sTitulo= funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["nome"].ToString());
+                sDetalhe = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["nome"].ToString());
+
+                sId_usuarioResposta = ds.Tables["manutencao"].Rows[i]["id_usuarioResposta"].ToString();
+                sBlocoResposta = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["bloco"].ToString());
+                sAptoResposta = funcoes1.LimpaLinha(ds.Tables["encomendas"].Rows[i]["apto"].ToString());
+
+                sDataResposta = funcoes1.LimpaLinha(ds.Tables["manutenmcao"].Rows[i]["dataResposta"].ToString());
+                sResposta = funcoes1.LimpaLinha(ds.Tables["manutenmcao"].Rows[i]["resposta"].ToString());
 
 
-      #region  // ----------------------------- Funções - Livro de Ocorrências ---------------------------------
+                sXml += "<registro>";
+                sXml += "<id_manutencaoTaco>" + sId_manutencaoTaco + "</id_manutencaoTaco>";
+                sXml += "<id_usuario>" + sId_usuario + "</id_usuario>";
+                sXml += "<tipo>" + sTipo + "</tipo>";
+                sXml += "<bloco>" + sBloco + "</bloco>";
+                sXml += "<apto>" + sApto + "</apto>";
 
-      private DataSet insereOcorrenciasAZURE(DataSet dsOcorrenciasTACO)
+                sXml += "<titulo>" + sTitulo + "</titulo>";
+                sXml += "<detalhe>" + sDetalhe + "</detalhe>";
+
+                sXml += "<id_usuarioResposta>" + sId_usuarioResposta + "</id_usuarioResposta>";
+                sXml += "<blocoResposta>" + sBlocoResposta + "</blocoResposta>";
+                sXml += "<aptoResposta>" + sAptoResposta + "</aptoResposta>";
+
+
+                sXml += "<dataResposta>" + sDataResposta + "</dataResposta>";
+                sXml += "<resposta>" + sResposta + "</resposta>";
+
+                sXml += "</registro>";
+            }
+            sXml += "</cliente>";
+            sXml += "</manutencao>";
+
+            return sXml;
+        }
+        private void registraConversaoManutencaoPredial(string sId_manutencao)
+        {
+            try
+            {
+                listBox1.Items.Add("    - Registrando arquivo convertido AZURE.");
+
+                if (funDB1.conectarAzure() == "OK")
+                {
+                    try
+                    {
+
+                        string sCmd = "";
+                        sCmd = "EXEC OMPSP_manutencaoPredial @id_empresa = " + this.id_empresa + ", " +
+                               " @id_manutencao=" + sId_manutencao + ", " +
+                               "@modo=31";
+
+                        SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
+                        da.SelectCommand.CommandTimeout = 0;
+                        da.Fill(dsArquivosAzure, "manutencaoOK");
+                        funDB1.fecharAzure();
+
+                    }
+                    catch (SqlException ex)
+                    {
+                        listBox1.Items.Add("    - Erro enviando lista de manutenção predial TACO/AZURE (insereManutencaoPredialAZURE)");
+                    }
+                    finally
+                    {
+                        funDB1.fecharAzure();
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                listBox1.Items.Add("    - Erro ao regitsrar AZURE - id_manutencao: " + sId_manutencao);
+            }
+
+        }
+
+
+        private void procuraManutencaoPredialBinarioTaco(DataSet dsRetornoManutencaoPredialsAzure)
+        {
+            listBox1.Items.Add("    - Procura arquivo binário (TACO).");
+
+            string sNomeArquivoEditado = "";
+            int iManutencoes = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows.Count;
+
+            // Procura arquivos por Cliente
+            for (int a = 0; a < iManutencoes; a++)
+            {
+                if (bIsCancel) { return; }
+
+                //dsOcorrenciasTACO.Clear();
+                dsArquivosTACO.Clear();
+                listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                try
+                {
+                    if (funDB1.conectarTaco() == "OK")
+                    {
+                        try
+                        {
+                            string sId_manutencaoTaco = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows[a]["id_encomendaTaco"].ToString();
+                            string sId_manutencaoAzure = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows[a]["id_manutencao"].ToString();
+                            sNomeArquivoEditado = sId_manutencaoAzure.ToString(); // Não tem nome de arquivo, aderiri o ID
+                            string sUrlArquivo = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows[a]["urlArquivo"].ToString(); ; // Se tivesse no Firebase (Taco), viria a informação...não é o caso.
+
+                            listBox1.Items.Add("");
+
+                            listBox1.Items.Add("       " + DateTime.Now.ToString("dd/mm/yyyy H:mm:ss"));
+                            listBox1.Items.Add("       ******* (TACO) id_manutencao: " + sId_manutencaoTaco + " - (AZURE) id_manutencao : " + sId_manutencaoAzure + " *******");
+                            listBox1.Items.Add("       - (TACO) Buscando arquivo byte.");
+
+                            string sCmd = "";
+                            // VOLTAR AQUI
+                            sCmd = "EXEC OMPSP_manutencaoPredial @id_manutencao=" + sId_manutencaoTaco + ", " +
+                                   "@modo=8";
+                            Boolean bSegue = false;
+                            try
+                            {
+                                SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conTaco);
+                                da.SelectCommand.CommandTimeout = 0;
+                                da.Fill(dsArquivosTACO, "arquivos");
+                                bSegue = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                bSegue = false;
+                            }
+                            finally
+                            {
+                                funDB1.fecharTaco();
+                            }
+
+
+                            if (dsArquivosTACO.Tables["arquivos"].Rows.Count > 0)
+                            {
+                                listBox1.Items.Add("       - (TACO) - Localizado arquivo encomenda.");
+
+                                byte[] arquivoM = new byte[0];
+                                DataRow linhaM = dsArquivosTACO.Tables[0].Rows[0];
+                                arquivoM = (byte[])linhaM["imagem"];
+
+                                // Enviar o Bytes para o FIREBASE.
+                                // Sobe para o Firebase o documento
+                                if (Convert.ToInt32(sId_manutencaoTaco) > 0 && bSegue)
+                                {
+                                    listBox1.Items.Add("       - (Firebase) Enviando arquivo...");
+
+                                    // Faz a rolagem da lista
+                                    listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                                    string sArquivoCompleto = sUrlArquivo;
+                                    //string sMimeType = funDrive1.retornaMimeType(sExtensao);
+                                    string sMimeType = "image/jpeg";
+
+                                    if (!funDrive1.uploadSCCToDrive(sArquivoCompleto, sMimeType, arquivoM))
+                                    {
+                                        listBox1.Items.Add("          - Já realizado envio anteriormente");
+                                    }
+                                    else
+                                    {
+                                        listBox1.Items.Add("          - Enviado!");
+                                    }
+
+                                    // Faz a rolagem da lista
+                                    listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                                    // Pausa de 2 segundos, evitar TimeOut.
+                                    System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2));
+                                }
+                                //}
+                            }
+                            else
+                            {
+                                listBox1.Items.Add("       - (TACO) - Não localizado arquivo byte");
+                            }
+
+                            registraConversaoManutencaoPredial(sId_manutencaoAzure);
+                        }
+                        catch (SqlException ex)
+                        {
+                            listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 2");
+                        }
+                        finally
+                        {
+                            funDB1.fecharTaco();
+                        }
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 3");
+                }
+                finally
+                {
+                    funDB1.fecharTaco();
+                }
+
+                // Faz a lista correr.
+                listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            }
+        }
+
+        #endregion
+
+        #region  // ----------------------------- Funções - Livro de Ocorrências ---------------------------------
+
+        private DataSet insereOcorrenciasAZURE(DataSet dsOcorrenciasTACO)
       {
          dsOcorrenciasAzure.Clear();
 
@@ -1690,6 +1988,7 @@ namespace conversaoClient
 
       }
       #endregion
+
 
       private void procuraArquivoBinarioTaco(DataSet dsRetornoArquivosAzure)
       {
