@@ -393,10 +393,10 @@ namespace conversaoClient
                       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
                       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 ORDER BY cli.codigo ";
 
-               sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
-                      "FROM WO_cliente cli " +
-                      "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
-                      "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00001000' ORDER BY cli.codigo ";
+               //sCmd = "SELECT emp.id_empresa, cli.id_cliente, cli.codigo, cli.nome " +
+               //       "FROM WO_cliente cli " +
+               //       "LEFT OUTER JOIN WO_empresa emp ON cli.id_empresa = emp.id_empresa " +
+               //       "WHERE emp.codigo ='" + this.sCodigoAdm + "' and crm_tipo = 1 and cli.codigo='00001000' ORDER BY cli.codigo ";
 
                SqlDataAdapter da = new SqlDataAdapter(sCmd, funDB1.conAzure);
                da.SelectCommand.CommandTimeout = 0;
@@ -827,13 +827,13 @@ namespace conversaoClient
                         }
                         else
                         {
-                            listBox1.Items.Add("    - Não existem registros de encomendas a serem enviados.");
+                            listBox1.Items.Add("    - Não existem registros de manutenção predial a serem enviados.");
                         }
                     }
                 }
                 else
                 {
-                    listBox1.Items.Add("    - Não existem registros de encomendas para esse cliente.");
+                    listBox1.Items.Add("    - Não existem registros de manutenção predial para esse cliente.");
                 }
             }
             #endregion
@@ -1309,7 +1309,7 @@ namespace conversaoClient
                 string sId_manutencaoTaco = "", sId_usuario = "", sTipo = "", sBloco = "", sApto = "", sNome = "",
                        sLocal = "", sObservacao = "", sDataCadastro = "", sTemFoto = "",
                        sId_tipoEncomenda = "", sNomeTipoEncomenda = "", sEspacoEncomenda = "",
-                       sTitulo="", sDescricao = "", sId_usuarioResposta="", sBlocoResposta="", sAptoResposta="", sDataResposta="", sResposta = "";
+                       sTitulo="", sDetalhe = "", sId_usuarioResposta="", sBlocoResposta="", sAptoResposta="", sDataResposta="", sResposta = "";
 
                 sId_manutencaoTaco = ds.Tables["manutencao"].Rows[i]["id_manutencao"].ToString();
                 sId_usuario = ds.Tables["manutencao"].Rows[i]["id_usuario"].ToString();
@@ -1318,15 +1318,17 @@ namespace conversaoClient
                 sApto = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["apto"].ToString());
                 
                 sTitulo= funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["titulo"].ToString());
-                sDescricao = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["descricao"].ToString());
+                sDetalhe = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["detalhe"].ToString());
 
                 sId_usuarioResposta = ds.Tables["manutencao"].Rows[i]["id_usuarioResposta"].ToString();
                 sBlocoResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["bloco"].ToString());
                 sAptoResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["apto"].ToString());
 
+                sDataCadastro = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["dataCadastro"].ToString());
                 sDataResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["dataResposta"].ToString());
                 sResposta = funcoes1.LimpaLinha(ds.Tables["manutencao"].Rows[i]["resposta"].ToString());
 
+                sTemFoto = ds.Tables["manutencao"].Rows[i]["temFoto"].ToString();
 
                 sXml += "<registro>";
                 sXml += "<id_manutencaoTaco>" + sId_manutencaoTaco + "</id_manutencaoTaco>";
@@ -1336,15 +1338,18 @@ namespace conversaoClient
                 sXml += "<apto>" + sApto + "</apto>";
 
                 sXml += "<titulo>" + sTitulo + "</titulo>";
-                sXml += "<descricao>" + sDescricao + "</descricao>";
+                sXml += "<detalhe>" + sDetalhe + "</detalhe>";
 
                 sXml += "<id_usuarioResposta>" + sId_usuarioResposta + "</id_usuarioResposta>";
                 sXml += "<blocoResposta>" + sBlocoResposta + "</blocoResposta>";
                 sXml += "<aptoResposta>" + sAptoResposta + "</aptoResposta>";
-
+                sXml += "<dataCadastro>" + sDataCadastro + "</dataCadastro>";
 
                 sXml += "<dataResposta>" + sDataResposta + "</dataResposta>";
                 sXml += "<resposta>" + sResposta + "</resposta>";
+
+                sXml += "<temFoto>" + sTemFoto + "</temFoto>";
+
 
                 sXml += "</registro>";
             }
@@ -1415,7 +1420,7 @@ namespace conversaoClient
                     {
                         try
                         {
-                            string sId_manutencaoTaco = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows[a]["id_encomendaTaco"].ToString();
+                            string sId_manutencaoTaco = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows[a]["id_manutencaoTaco"].ToString();
                             string sId_manutencaoAzure = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows[a]["id_manutencao"].ToString();
                             sNomeArquivoEditado = sId_manutencaoAzure.ToString(); // Não tem nome de arquivo, aderiri o ID
                             string sUrlArquivo = dsRetornoManutencaoPredialsAzure.Tables["manutencao"].Rows[a]["urlArquivo"].ToString(); ; // Se tivesse no Firebase (Taco), viria a informação...não é o caso.
@@ -1429,7 +1434,7 @@ namespace conversaoClient
                             string sCmd = "";
                             // VOLTAR AQUI
                             sCmd = "EXEC OMPSP_manutencaoPredial @id_manutencao=" + sId_manutencaoTaco + ", " +
-                                   "@modo=8";
+                                   "@modo=4";
                             Boolean bSegue = false;
                             try
                             {
@@ -1450,11 +1455,16 @@ namespace conversaoClient
 
                             if (dsArquivosTACO.Tables["arquivos"].Rows.Count > 0)
                             {
-                                listBox1.Items.Add("       - (TACO) - Localizado arquivo encomenda.");
+                                listBox1.Items.Add("       - (TACO) - Localizado arquivo manutenção predial.");
 
                                 byte[] arquivoM = new byte[0];
                                 DataRow linhaM = dsArquivosTACO.Tables[0].Rows[0];
-                                arquivoM = (byte[])linhaM["imagem"];
+                                //arquivoM = (byte[])linhaM["imagem64"];
+
+                                // Pega como string
+                                string base64String = linhaM["imagem64"].ToString();
+                                // Converte para byte[]
+                                arquivoM = Convert.FromBase64String(base64String);
 
                                 // Enviar o Bytes para o FIREBASE.
                                 // Sobe para o Firebase o documento
@@ -1495,7 +1505,7 @@ namespace conversaoClient
                         }
                         catch (SqlException ex)
                         {
-                            listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 2");
+                            listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) manutenção predial procuraArquivoBinarioTaco() - 2");
                         }
                         finally
                         {
@@ -1505,7 +1515,7 @@ namespace conversaoClient
                 }
                 catch (SqlException ex)
                 {
-                    listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) procuraArquivoBinarioTaco() - 3");
+                    listBox1.Items.Add("    - Erro procura arquivo bytes (TACO) manutenção predial procuraArquivoBinarioTaco() - 3");
                 }
                 finally
                 {
